@@ -46,6 +46,7 @@ import {
 import { mockPlayers, type Player } from '@/lib/playerData';
 import { realDataService } from '@/lib/realDataService';
 import { toast } from 'sonner';
+import { getPlayerPhoto, getTeamLogo } from '@/lib/photoService';
 
 interface SeasonStats {
   season: string;
@@ -414,16 +415,34 @@ export function PlayerProfile() {
                           <div className="space-y-3">
                             <div className="flex items-start gap-3">
                               <Avatar className="h-12 w-12 border-2 border-primary/20">
-                                <AvatarImage src={player.photo} alt={player.name} />
+                                <AvatarImage 
+                                  src={player.photo || getPlayerPhoto(player.id, player.name, player.team).headshot} 
+                                  alt={player.name}
+                                  onError={(e) => {
+                                    const target = e.target as HTMLImageElement;
+                                    target.src = getPlayerPhoto(player.id, player.name, player.team).fallback;
+                                  }}
+                                />
                                 <AvatarFallback className="bg-primary/10 text-primary font-semibold">
                                   {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-base truncate">{player.name}</h3>
-                                <p className="text-xs text-muted-foreground truncate">
-                                  {player.team} • {player.conference}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                  <h3 className="font-semibold text-base truncate">{player.name}</h3>
+                                </div>
+                                <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                  <img 
+                                    src={getTeamLogo(player.team).primary} 
+                                    alt={player.team}
+                                    className="h-4 w-4 object-contain"
+                                    onError={(e) => {
+                                      const target = e.target as HTMLImageElement;
+                                      target.style.display = 'none';
+                                    }}
+                                  />
+                                  <span className="truncate">{player.team} • {player.conference}</span>
+                                </div>
                               </div>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">

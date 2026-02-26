@@ -32,6 +32,8 @@ import {
 import { mockPlayers, type Player } from '@/lib/playerData';
 import { realDataService } from '@/lib/realDataService';
 import { toast } from 'sonner';
+import { getPlayerPhoto, getTeamLogo } from '@/lib/photoService';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function PlayerComparison() {
   const [selectedDivision, setSelectedDivision] = useState<string>('all');

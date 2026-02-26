@@ -18,6 +18,7 @@ import { ArrowClockwise, Baseball, Calendar, MapPin, Users, Pulse, ChatText } fr
 import { espnGameData, type GameBoxScore, type PlayByPlayEvent } from '@/lib/espnGameData';
 import type { ESPNGame } from '@/lib/espnAPI';
 import { toast } from 'sonner';
+import { getTeamLogo } from '@/lib/photoService';
 
 export function GameScoreboard() {
   const [games, setGames] = useState<ESPNGame[]>([]);
@@ -361,19 +362,41 @@ export function GameScoreboard() {
                         </div>
                         
                         <div className="space-y-1.5">
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">
-                              {awayTeam?.team.abbreviation || 'Away'}
-                            </span>
-                            <span className="text-sm font-bold">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <img 
+                                src={getTeamLogo(awayTeam?.team.displayName || 'Away').primary}
+                                alt={awayTeam?.team.abbreviation}
+                                className="h-5 w-5 object-contain flex-shrink-0"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                              <span className="text-sm font-medium truncate">
+                                {awayTeam?.team.abbreviation || 'Away'}
+                              </span>
+                            </div>
+                            <span className="text-sm font-bold tabular-nums">
                               {awayTeam?.score || '0'}
                             </span>
                           </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm font-medium">
-                              {homeTeam?.team.abbreviation || 'Home'}
-                            </span>
-                            <span className="text-sm font-bold">
+                          <div className="flex items-center justify-between gap-2">
+                            <div className="flex items-center gap-2 flex-1 min-w-0">
+                              <img 
+                                src={getTeamLogo(homeTeam?.team.displayName || 'Home').primary}
+                                alt={homeTeam?.team.abbreviation}
+                                className="h-5 w-5 object-contain flex-shrink-0"
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                }}
+                              />
+                              <span className="text-sm font-medium truncate">
+                                {homeTeam?.team.abbreviation || 'Home'}
+                              </span>
+                            </div>
+                            <span className="text-sm font-bold tabular-nums">
                               {homeTeam?.score || '0'}
                             </span>
                           </div>
