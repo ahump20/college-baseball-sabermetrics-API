@@ -3,7 +3,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
-import { Database, ChartBar, Users, Trophy, Code, Calculator, ChartLine, Gear, List, Flame, Sparkle, Lightning } from '@phosphor-icons/react';
+import { Database, ChartBar, Users, Trophy, Code, Calculator, ChartLine, Gear, List, Flame, Sparkle, Lightning, Baseball } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -173,6 +173,7 @@ function App() {
   );
 
   const viewTitles: Record<ViewType, string> = {
+    portal: 'NCAA Baseball Portal',
     dashboard: 'Dashboard',
     highlightly: 'Highlightly API Integration',
     'live-scores': 'Live Scores & Schedules',
@@ -188,6 +189,7 @@ function App() {
   };
 
   const viewDescriptions: Record<ViewType, string> = {
+    portal: 'Comprehensive NCAA baseball analytics and team portal',
     dashboard: 'Real-time NCAA baseball analytics and platform metrics',
     highlightly: 'MLB & College Baseball data from Highlightly API',
     'live-scores': 'Live game scores and schedules from ESPN',
@@ -262,6 +264,7 @@ function App() {
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
               className="h-full"
             >
+              {currentView === 'portal' && <NCAABaseballPortal />}
               {currentView === 'dashboard' && <RealTimeDashboard />}
               {currentView === 'highlightly' && <HighlightlyDataDashboard />}
               {currentView === 'live-scores' && <LiveGameScores />}
