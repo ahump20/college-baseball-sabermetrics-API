@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Badge } from '@/components/ui/badge';
 import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
@@ -15,131 +16,167 @@ function App() {
   const [activeTab, setActiveTab] = useState('api');
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 w-full border-b bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex h-16 items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-                <Database className="text-primary-foreground" size={24} />
+    <div className="min-h-screen bg-background flex flex-col">
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/80">
+        <div className="container mx-auto px-6 lg:px-8">
+          <div className="flex h-20 items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-lg bg-primary flex items-center justify-center shadow-sm">
+                <Database className="text-primary-foreground" size={26} weight="bold" />
               </div>
               <div>
-                <h1 className="text-lg font-semibold">College Baseball Sabermetrics API</h1>
-                <p className="text-xs text-muted-foreground">
+                <h1 className="text-xl font-semibold tracking-tight">College Baseball Sabermetrics API</h1>
+                <p className="text-sm text-muted-foreground font-mono">
                   NCAA Analytics Platform Architecture
                 </p>
               </div>
+            </div>
+            <div className="flex items-center gap-3">
+              <Badge variant="outline" className="font-mono text-xs border-success/30 bg-success/10 text-success">
+                <Pulse size={12} weight="bold" className="mr-1.5" />
+                Mock Environment
+              </Badge>
+              <Badge variant="outline" className="font-mono text-xs">
+                v1.0.0
+              </Badge>
             </div>
           </div>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-9 lg:w-auto lg:inline-grid">
-            <TabsTrigger value="api" className="gap-2">
-              <Code size={16} />
-              <span className="hidden sm:inline">API</span>
+      <main className="flex-1 container mx-auto px-6 lg:px-8 py-8">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-6">
+          <TabsList className="inline-flex h-11 w-auto gap-1 bg-muted/50 p-1">
+            <TabsTrigger value="api" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Code size={16} weight="bold" />
+              <span className="font-medium">API Explorer</span>
             </TabsTrigger>
-            <TabsTrigger value="schema" className="gap-2">
-              <Database size={16} />
-              <span className="hidden sm:inline">Schema</span>
+            <TabsTrigger value="schema" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Database size={16} weight="bold" />
+              <span className="font-medium">Schema</span>
             </TabsTrigger>
-            <TabsTrigger value="erd" className="gap-2">
-              <Shapes size={16} />
-              <span className="hidden sm:inline">ERD</span>
+            <TabsTrigger value="erd" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Shapes size={16} weight="bold" />
+              <span className="font-medium">ERD</span>
             </TabsTrigger>
-            <TabsTrigger value="metrics" className="gap-2">
-              <Calculator size={16} />
-              <span className="hidden sm:inline">Analytics</span>
+            <TabsTrigger value="metrics" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Calculator size={16} weight="bold" />
+              <span className="font-medium">Analytics</span>
             </TabsTrigger>
-            <TabsTrigger value="comparison" className="gap-2">
-              <ArrowsLeftRight size={16} />
-              <span className="hidden sm:inline">Compare</span>
+            <TabsTrigger value="comparison" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <ArrowsLeftRight size={16} weight="bold" />
+              <span className="font-medium">Compare</span>
             </TabsTrigger>
-            <TabsTrigger value="players" className="gap-2">
-              <Users size={16} />
-              <span className="hidden sm:inline">Players</span>
+            <TabsTrigger value="players" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Users size={16} weight="bold" />
+              <span className="font-medium">Players</span>
             </TabsTrigger>
-            <TabsTrigger value="live" className="gap-2">
-              <Pulse size={16} />
-              <span className="hidden sm:inline">Live API</span>
+            <TabsTrigger value="live" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <Pulse size={16} weight="bold" />
+              <span className="font-medium">Live API</span>
             </TabsTrigger>
-            <TabsTrigger value="provenance" className="gap-2">
-              <GitBranch size={16} />
-              <span className="hidden sm:inline">Provenance</span>
+            <TabsTrigger value="provenance" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <GitBranch size={16} weight="bold" />
+              <span className="font-medium">Provenance</span>
             </TabsTrigger>
-            <TabsTrigger value="coverage" className="gap-2">
-              <ChartBar size={16} />
-              <span className="hidden sm:inline">Coverage</span>
+            <TabsTrigger value="coverage" className="gap-2 data-[state=active]:bg-card data-[state=active]:shadow-sm">
+              <ChartBar size={16} weight="bold" />
+              <span className="font-medium">Coverage</span>
             </TabsTrigger>
           </TabsList>
 
-          <div className="mt-8">
-            <TabsContent value="api" className="mt-0">
+          <div>
+            <TabsContent value="api" className="mt-0 space-y-6">
               <APIExplorer />
             </TabsContent>
 
-            <TabsContent value="schema" className="mt-0">
+            <TabsContent value="schema" className="mt-0 space-y-6">
               <SchemaViewer />
             </TabsContent>
 
-            <TabsContent value="erd" className="mt-0">
+            <TabsContent value="erd" className="mt-0 space-y-6">
               <InteractiveERD />
             </TabsContent>
 
-            <TabsContent value="metrics" className="mt-0">
+            <TabsContent value="metrics" className="mt-0 space-y-6">
               <MetricsCalculator />
             </TabsContent>
 
-            <TabsContent value="comparison" className="mt-0">
+            <TabsContent value="comparison" className="mt-0 space-y-6">
               <ComparisonTool />
             </TabsContent>
 
-            <TabsContent value="players" className="mt-0">
+            <TabsContent value="players" className="mt-0 space-y-6">
               <PlayerComparison />
             </TabsContent>
 
-            <TabsContent value="live" className="mt-0">
+            <TabsContent value="live" className="mt-0 space-y-6">
               <LiveAPISimulator />
             </TabsContent>
 
-            <TabsContent value="provenance" className="mt-0">
+            <TabsContent value="provenance" className="mt-0 space-y-6">
               <ProvenanceTracker />
             </TabsContent>
 
-            <TabsContent value="coverage" className="mt-0">
+            <TabsContent value="coverage" className="mt-0 space-y-6">
               <CoverageDashboard />
             </TabsContent>
           </div>
         </Tabs>
       </main>
 
-      <footer className="border-t mt-16">
-        <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-sm">
+      <footer className="border-t border-border bg-muted/30 mt-auto">
+        <div className="container mx-auto px-6 lg:px-8 py-12">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
-              <h3 className="font-semibold mb-3">Architecture Layers</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Rights & Provenance Tracking</li>
-                <li>• Canonical ID Mapping</li>
-                <li>• Advanced Sabermetrics</li>
+              <h3 className="font-semibold text-base mb-4">Architecture Layers</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Rights & Provenance Tracking</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Canonical ID Mapping</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Advanced Sabermetrics</span>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3">NCAA Compliance</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Host-Official Rule</li>
-                <li>• Box Score Proofing</li>
-                <li>• Correction Workflows</li>
+              <h3 className="font-semibold text-base mb-4">NCAA Compliance</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Host-Official Rule</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Box Score Proofing</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Correction Workflows</span>
+                </li>
               </ul>
             </div>
             <div>
-              <h3 className="font-semibold mb-3">Key Features</h3>
-              <ul className="space-y-2 text-muted-foreground">
-                <li>• Coverage-Aware Metrics</li>
-                <li>• Context Adjustments</li>
-                <li>• Model Versioning</li>
+              <h3 className="font-semibold text-base mb-4">Key Features</h3>
+              <ul className="space-y-2 text-sm text-muted-foreground">
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Coverage-Aware Metrics</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Context Adjustments</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-primary mt-0.5">•</span>
+                  <span>Model Versioning</span>
+                </li>
               </ul>
             </div>
           </div>
