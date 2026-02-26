@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -12,9 +12,10 @@ import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
 import { GameScoreboard } from '@/components/GameScoreboard';
+import { APIAccessDocs } from '@/components/APIAccessDocs';
 import { PageLoading } from '@/components/Loading';
 import { usePageLoading } from '@/hooks/use-loading';
-import blazeLogo from '@/assets/images/Screenshot_2026-02-25_at_5.12.06_PM.png';
+import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
 
 function App() {
   const [activeTab, setActiveTab] = useState('games');
@@ -62,6 +63,10 @@ function App() {
                 <Baseball size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">Games</span>
               </TabsTrigger>
+              <TabsTrigger value="api-docs" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+                <Key size={18} weight="bold" />
+                <span className="font-medium text-[0.875rem]">API Docs</span>
+              </TabsTrigger>
               <TabsTrigger value="api" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
                 <Code size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">API Explorer</span>
@@ -104,6 +109,10 @@ function App() {
           <div>
             <TabsContent value="games" className="mt-0 space-y-6">
               <GameScoreboard />
+            </TabsContent>
+
+            <TabsContent value="api-docs" className="mt-0 space-y-6">
+              <APIAccessDocs />
             </TabsContent>
 
             <TabsContent value="api" className="mt-0 space-y-6">

@@ -5,17 +5,20 @@ compatibility_date = "2024-01-01"
 [observability]
 enabled = true
 
-# KV Namespace for rate limiting (create with: wrangler kv:namespace create "RATE_LIMIT")
+# KV Namespace for rate limiting (create with: wrangler kv:namespace create RATE_LIMIT_KV)
 # Uncomment and add your KV namespace ID after creating it
 # [[kv_namespaces]]
 # binding = "RATE_LIMIT_KV"
 # id = "your-kv-namespace-id-here"
 
-# Secrets (set via: wrangler secret put MCP_API_KEY)
-# MCP_API_KEY - API key for authentication (leave unset for no auth)
+# Secrets (set via: wrangler secret put BSI_API_KEY)
+# BSI_API_KEY - API key for authentication (leave unset for no auth)
 
 # Custom domain configuration for Blaze Sports Intel
-# Uncomment after adding blazesportsintel.com zone to Cloudflare
 routes = [
   { pattern = "sabermetrics.blazesportsintel.com/*", zone_name = "blazesportsintel.com" }
 ]
+
+# Custom domains configuration
+[[custom_domains]]
+hostname = "sabermetrics.blazesportsintel.com"

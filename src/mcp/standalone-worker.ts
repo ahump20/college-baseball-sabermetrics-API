@@ -1,5 +1,5 @@
 interface Env {
-  MCP_API_KEY?: string;
+  BSI_API_KEY?: string;
   RATE_LIMIT_KV?: KVNamespace;
 }
 
@@ -8,8 +8,8 @@ interface RateLimitData {
   resetTime: number;
 }
 
-const RATE_LIMIT_WINDOW = 3600000;
-const RATE_LIMIT_MAX_REQUESTS = 1000;
+const RATE_LIMIT_WINDOW = 60000;
+const RATE_LIMIT_MAX_REQUESTS = 60;
 
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
@@ -34,22 +34,28 @@ export default {
       'Content-Type': 'application/json',
     };
 
-    if (url.pathname === '/health') {
-      return new Response(
-        JSON.stringify({
-          status: 'ok',
-          service: 'college-baseball-sabermetrics-mcp',
-          version: '1.0.0',
-        }),
-        { headers: corsHeaders }
-      );
+    if (url.pathname === '/health' || url.pathname === '/' || url.pathname === '/favicon.svg' || url.pathname === '/favicon.ico') {
+      if (url.pathname === '/health') {
+        return new Response(
+          JSON.stringify({
+            status: 'ok',
+            service: 'college-baseball-sabermetrics-mcp',
+            version: '1.0.0',
+          }),
+          { headers: corsHeaders }
+        );
+      }
+      return new Response('OK', { headers: corsHeaders });
     }
 
-    if (url.pathname === '/mcp' && request.method === 'POST') {
+    if ((url.pathname.startsWith('/api/') || url.pathname === '/mcp') && request.method === 'POST') {
       const authResult = await checkAuth(request, env);
       if (!authResult.authorized) {
         return new Response(
-          JSON.stringify({ error: authResult.error }),
+          JSON.stringify({
+            error: 'Unauthorized',
+            message: 'Valid API key required. Set header: Authorization: Bearer YOUR_KEY'
+          }),
           { status: 401, headers: corsHeaders }
         );
       }
@@ -59,14 +65,13 @@ export default {
         return new Response(
           JSON.stringify({ 
             error: 'Rate limit exceeded',
-            limit: RATE_LIMIT_MAX_REQUESTS,
-            window: RATE_LIMIT_WINDOW / 1000,
-            resetAt: new Date(rateLimitResult.resetTime!).toISOString()
+            message: '60 requests/minute limit. Retry after 60 seconds.'
           }),
           { 
             status: 429, 
             headers: {
               ...corsHeaders,
+              'Retry-After': '60',
               'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
               'X-RateLimit-Remaining': String(rateLimitResult.remaining || 0),
               'X-RateLimit-Reset': String(rateLimitResult.resetTime),
@@ -75,29 +80,30 @@ export default {
         );
       }
 
-      try {
-        const mcpRequest = await request.json() as any;
-        const { jsonrpc, id, method, params } = mcpRequest;
+      if (url.pathname === '/mcp') {
+        try {
+          const mcpRequest = await request.json() as any;
+          const { jsonrpc, id, method, params } = mcpRequest;
 
-        if (jsonrpc !== '2.0') {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: '2.0',
-              id,
-              error: { code: -32600, message: 'Invalid Request' },
-            }),
-            { headers: corsHeaders }
-          );
-        }
+          if (jsonrpc !== '2.0') {
+            return new Response(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id,
+                error: { code: -32600, message: 'Invalid Request' },
+              }),
+              { headers: corsHeaders }
+            );
+          }
 
-        let result: any;
+          let result: any;
 
-        switch (method) {
-          case 'initialize':
-            result = {
-              protocolVersion: '2024-11-05',
-              capabilities: { tools: {} },
-              serverInfo: {
+          switch (method) {
+            case 'initialize':
+              result = {
+                protocolVersion: '2024-11-05',
+                capabilities: { tools: {} },
+                serverInfo: {
                 name: 'college-baseball-sabermetrics-api',
                 version: '1.0.0',
               },
@@ -237,13 +243,14 @@ export default {
         );
       }
     }
+  }
 
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   },
 };
 
 async function checkAuth(request: Request, env: Env): Promise<{ authorized: boolean; error?: string }> {
-  if (!env.MCP_API_KEY) {
+  if (!env.BSI_API_KEY) {
     return { authorized: true };
   }
 
@@ -256,7 +263,7 @@ async function checkAuth(request: Request, env: Env): Promise<{ authorized: bool
     return { authorized: false, error: 'Missing API key. Provide via Authorization: Bearer <key> or X-API-Key header.' };
   }
 
-  if (providedKey !== env.MCP_API_KEY) {
+  if (providedKey !== env.BSI_API_KEY) {
     return { authorized: false, error: 'Invalid API key' };
   }
 

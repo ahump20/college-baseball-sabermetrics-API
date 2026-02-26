@@ -25,10 +25,22 @@ This guide will walk you through deploying the College Baseball Sabermetrics API
 4. Follow the nameserver configuration steps
 5. Update your domain registrar's nameservers to Cloudflare's
 
-### 1.2: Verify DNS is active
+### 1.2: Add CNAME record for subdomain
+
+**In Cloudflare DNS for blazesportsintel.com, add:**
+
+- **Type:** CNAME
+- **Name:** sabermetrics
+- **Target:** college-baseball-sab.ahump20.workers.dev
+- **Proxy:** ON (orange cloud)
+
+This creates the subdomain `sabermetrics.blazesportsintel.com` and routes it to your Cloudflare Worker.
+
+### 1.3: Verify DNS is active
 
 Once nameservers propagate (usually 5-30 minutes):
 - Your Cloudflare dashboard should show `blazesportsintel.com` as **Active**
+- The CNAME record for `sabermetrics` should be visible in the DNS records list
 
 ---
 
@@ -220,14 +232,14 @@ Claude should use `calculate_batting_metrics` and explain wOBA, wRC+, ISO, etc.
 ### 7.1: Create KV namespace for rate limiting
 
 ```bash
-wrangler kv:namespace create "RATE_LIMIT"
+wrangler kv:namespace create RATE_LIMIT_KV
 ```
 
-Copy the namespace ID from output.
+Copy the namespace ID from output (looks like: `id = "abc123def456..."`).
 
 ### 7.2: Update wrangler.toml
 
-Uncomment and update the KV binding:
+Uncomment and update the KV binding in `wrangler.toml`:
 
 ```toml
 [[kv_namespaces]]
@@ -235,13 +247,17 @@ binding = "RATE_LIMIT_KV"
 id = "YOUR_KV_NAMESPACE_ID"
 ```
 
+Replace `YOUR_KV_NAMESPACE_ID` with the ID from step 7.1.
+
 ### 7.3: Set API key secret
 
 ```bash
-wrangler secret put MCP_API_KEY
+wrangler secret put BSI_API_KEY
 ```
 
 Enter a secure API key when prompted (e.g., generate with `openssl rand -hex 32`).
+
+**Important:** This API key will be required for all `/api/*` and `/mcp` requests. Public endpoints like `/health`, `/`, `/favicon.svg`, and `/favicon.ico` remain accessible without authentication.
 
 ### 7.4: Redeploy
 
@@ -253,8 +269,20 @@ wrangler deploy
 
 1. Go back to Claude.ai → Settings → Connectors
 2. Click on your connector
-3. **Advanced settings** → Enter the API key
+3. **Advanced settings** → Add custom header:
+   - **Key:** `Authorization`
+   - **Value:** `Bearer YOUR_BSI_API_KEY`
 4. Save
+
+### 7.6: Rate Limiting Details
+
+The API enforces the following rate limits per API key:
+- **60 requests per minute**
+- When exceeded, HTTP 429 is returned with `Retry-After: 60` header
+- Rate limit headers included in all responses:
+  - `X-RateLimit-Limit`: Maximum requests allowed
+  - `X-RateLimit-Remaining`: Requests remaining in current window
+  - `X-RateLimit-Reset`: Timestamp when limit resets
 
 ---
 
