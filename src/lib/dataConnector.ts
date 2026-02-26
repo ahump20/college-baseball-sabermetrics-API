@@ -320,19 +320,53 @@ export class DataConnector {
   // --- Scoreboard -------------------------------------------------------------
 
   async getScoreboard(date?: string): Promise<UnifiedGame[]> {
+    // Normalise the input date so callers can pass ISO (YYYY-MM-DD),
+    // compact (YYYYMMDD) or NCAA-style (YYYY/MM/DD) while internally
+    // converting to each source's expected format.
+    let espnDate: string;
+    let ncaaDate: string | undefined;
+
+    if (!date) {
+      // Preserve existing behaviour:
+      // - ESPN: explicitly use today's date in YYYYMMDD.
+      // - NCAA: pass undefined so the API can apply its own default.
+      const todayIso = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      espnDate = todayIso.replace(/-/g, '');
+      ncaaDate = undefined;
+    } else {
+      const isoMatch = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+      const compactMatch = /^(\d{4})(\d{2})(\d{2})$/.exec(date);
+      const slashedMatch = /^(\d{4})\/(\d{2})\/(\d{2})$/.exec(date);
+
+      if (isoMatch) {
+        const [, y, m, d] = isoMatch;
+        espnDate = `${y}${m}${d}`;
+        ncaaDate = `${y}/${m}/${d}`;
+      } else if (compactMatch) {
+        const [, y, m, d] = compactMatch;
+        espnDate = `${y}${m}${d}`;
+        ncaaDate = `${y}/${m}/${d}`;
+      } else if (slashedMatch) {
+        const [, y, m, d] = slashedMatch;
+        espnDate = `${y}${m}${d}`;
+        ncaaDate = `${y}/${m}/${d}`;
+      } else {
+        // Fallback: pass through unknown formats unchanged to avoid
+        // breaking any existing but unconventional callers.
+        espnDate = date;
+        ncaaDate = date;
+      }
+    }
+
     for (const source of this.sources) {
       try {
         if (source === 'espn') {
-          const d = date ?? new Date().toISOString().split('T')[0].replace(/-/g, '');
-          const result = await espnAPI.getScoreboard(d, 100);
+          const result = await espnAPI.getScoreboard(espnDate, 100);
           if (result?.events?.length) {
             return result.events.map(normaliseESPNGame);
           }
         } else if (source === 'ncaa') {
-          const d = date
-            ? date.replace(/(\d{4})(\d{2})(\d{2})/, '$1/$2/$3')
-            : undefined;
-          const result = await ncaaAPI.getScoreboard(d);
+          const result = await ncaaAPI.getScoreboard(ncaaDate);
           if (result?.games?.length) {
             return result.games.map(normaliseNCAAGame);
           }
