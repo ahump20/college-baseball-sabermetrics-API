@@ -712,11 +712,10 @@ export function PlayerProfile() {
   const isPitcher = !!selectedPlayer.stats.pitching;
   const careerTotals = calculateCareerTotals(seasonHistory, isPitcher ? 'pitching' : 'batting');
   const careerHighlights = generateCareerHighlights(selectedPlayer, seasonHistory);
-  const videoClips = generatePlayerVideoClips(selectedPlayer);
 
   return (
+  return (
     <div className="space-y-6">
-      <div className="flex items-center gap-3">
         <Button variant="outline" size="sm" onClick={() => setSelectedPlayer(null)} className="gap-2">
           <ArrowLeft size={16} />
           Back to List
