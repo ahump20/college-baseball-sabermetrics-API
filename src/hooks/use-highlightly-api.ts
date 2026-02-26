@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
 
-const HIGHLIGHTLY_API_KEY = '0dd6501d-bd0f-4c6c-b653-084cafa3a995';
 const HIGHLIGHTLY_BASE_URL = 'https://api.highlightly.net';
 
 export interface HighlightlyGame {
@@ -88,6 +87,12 @@ export interface HighlightlyStats {
 }
 
 async function fetchFromHighlightly<T>(endpoint: string, params?: Record<string, string>): Promise<T> {
+  const apiKey = await getHighlightlyApiKey();
+  
+  if (!apiKey) {
+    throw new Error('Highlightly API key not configured');
+  }
+
   const url = new URL(`${HIGHLIGHTLY_BASE_URL}${endpoint}`);
   
   if (params) {
@@ -98,7 +103,7 @@ async function fetchFromHighlightly<T>(endpoint: string, params?: Record<string,
 
   const response = await fetch(url.toString(), {
     headers: {
-      'Authorization': `Bearer ${HIGHLIGHTLY_API_KEY}`,
+      'Authorization': `Bearer ${apiKey}`,
       'Content-Type': 'application/json',
     },
   });
@@ -108,6 +113,24 @@ async function fetchFromHighlightly<T>(endpoint: string, params?: Record<string,
   }
 
   return response.json();
+}
+
+async function getHighlightlyApiKey(): Promise<string | null> {
+  try {
+    const user = await window.spark.user();
+    if (!user?.isOwner) {
+      return null;
+    }
+    
+    const secrets = await window.spark.kv.get<any[]>('api-secrets');
+    if (!secrets) return null;
+    
+    const highlightlySecret = secrets.find(s => s.key === 'HIGHLIGHTLY_API_KEY');
+    return highlightlySecret?.value || null;
+  } catch (error) {
+    console.error('Failed to retrieve Highlightly API key:', error);
+    return null;
+  }
 }
 
 export function useHighlightlyGames(date?: string, league: string = 'college-baseball') {

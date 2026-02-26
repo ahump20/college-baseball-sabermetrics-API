@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,9 +26,18 @@ function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
+  const [isOwner, setIsOwner] = useState<boolean>(false);
   const isMobile = useIsMobile();
 
-  const navItems = [
+  useEffect(() => {
+    window.spark.user().then(user => {
+      setIsOwner(user?.isOwner || false);
+    }).catch(() => {
+      setIsOwner(false);
+    });
+  }, []);
+
+  const baseNavItems = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartLine },
     { id: 'highlightly' as ViewType, label: 'Highlightly API', icon: Sparkle },
     { id: 'live-scores' as ViewType, label: 'Live Scores', icon: CalendarDots },
@@ -39,8 +48,11 @@ function App() {
     { id: 'games' as ViewType, label: 'Games', icon: Trophy },
     { id: 'schema' as ViewType, label: 'Data Model', icon: Database },
     { id: 'coverage' as ViewType, label: 'Coverage', icon: ChartBar },
-    { id: 'config' as ViewType, label: 'Settings', icon: Gear },
   ];
+
+  const navItems = isOwner 
+    ? [...baseNavItems, { id: 'config' as ViewType, label: 'Settings', icon: Gear }]
+    : baseNavItems;
 
   const handleNavClick = (view: ViewType) => {
     setCurrentView(view);

@@ -23,13 +23,13 @@ const defaultSecrets: APISecret[] = [
     key: 'BSI_API_KEY',
     value: '',
     description: 'Primary API authentication key for MCP server access',
-    required: true
+    required: false
   },
   {
     name: 'Highlightly API Key',
     key: 'HIGHLIGHTLY_API_KEY',
-    value: '',
-    description: 'Highlightly MLB & College Baseball API access key',
+    value: '0dd6501d-bd0f-4c6c-b653-084cafa3a995',
+    description: 'Highlightly MLB & College Baseball API access key (Owner only)',
     required: true
   },
   {
