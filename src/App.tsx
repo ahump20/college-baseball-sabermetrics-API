@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key, ListNumbers, User } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key, ListNumbers, User, FileText } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -15,6 +15,7 @@ import { GameScoreboard } from '@/components/GameScoreboard';
 import { APIAccessDocs } from '@/components/APIAccessDocs';
 import { PlayerLeaderboards } from '@/components/PlayerLeaderboards';
 import { PlayerProfile } from '@/components/PlayerProfile';
+import { TexasLonghornsData } from '@/components/TexasLonghornsData';
 import { PageLoading } from '@/components/Loading';
 import { usePageLoading } from '@/hooks/use-loading';
 import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
@@ -113,6 +114,10 @@ function App() {
                 <ChartBar size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">Coverage</span>
               </TabsTrigger>
+              <TabsTrigger value="texas" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+                <FileText size={18} weight="bold" />
+                <span className="font-medium text-[0.875rem]">Texas Stats</span>
+              </TabsTrigger>
             </TabsList>
           </div>
 
@@ -167,6 +172,10 @@ function App() {
 
             <TabsContent value="coverage" className="mt-0 space-y-6">
               <CoverageDashboard />
+            </TabsContent>
+
+            <TabsContent value="texas" className="mt-0 space-y-6">
+              <TexasLonghornsData />
             </TabsContent>
           </div>
         </Tabs>
