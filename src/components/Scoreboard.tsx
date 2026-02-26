@@ -88,6 +88,15 @@ function GameCard({ game, onSelect }: { game: ESPNGame; onSelect: (game: ESPNGam
     <Card
       className="cursor-pointer hover:border-primary/40 transition-colors"
       onClick={() => onSelect(game)}
+      role="button"
+      tabIndex={0}
+      aria-label={`View details for ${awayTeam?.team?.displayName ?? 'away team'} at ${homeTeam?.team?.displayName ?? 'home team'} on ${formatGameDate(game.date)}`}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          onSelect(game);
+        }
+      }}
     >
       <CardContent className="p-4">
         <div className="flex items-center justify-between mb-3">
