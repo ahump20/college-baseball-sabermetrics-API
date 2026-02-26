@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -12,6 +12,7 @@ import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
 import { GameScoreboard } from '@/components/GameScoreboard';
+import blazeLogo from '@/assets/images/Screenshot_2026-02-25_at_5.12.06_PM.png';
 
 function App() {
   const [activeTab, setActiveTab] = useState('games');
@@ -20,12 +21,14 @@ function App() {
     <div className="min-h-screen bg-background flex flex-col">
       <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/90">
         <div className="container mx-auto px-6 lg:px-8">
-          <div className="flex h-20 items-center justify-between gap-8">
+          <div className="flex h-24 items-center justify-between gap-8">
             <div className="flex items-center gap-4 flex-1 min-w-0">
-              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-primary/80 flex items-center justify-center shadow-md shrink-0">
-                <Database className="text-primary-foreground" size={24} weight="bold" />
-              </div>
-              <div className="min-w-0">
+              <img 
+                src={blazeLogo} 
+                alt="Blaze Sports Intel" 
+                className="h-16 w-auto shrink-0"
+              />
+              <div className="min-w-0 border-l border-border/50 pl-4">
                 <h1 className="text-[1.25rem] font-semibold tracking-tight text-foreground leading-tight truncate">
                   College Baseball Sabermetrics API
                 </h1>
@@ -37,9 +40,10 @@ function App() {
             <div className="flex items-center gap-3 shrink-0">
               <Badge variant="outline" className="font-mono text-[0.75rem] px-3 py-1.5 border-success/30 bg-success/10 text-success gap-1.5 hidden sm:flex">
                 <Pulse size={12} weight="bold" />
-                Mock Environment
+                Live Data
               </Badge>
-              <Badge variant="outline" className="font-mono text-[0.75rem] px-3 py-1.5 hidden sm:flex">
+              <Badge variant="outline" className="font-mono text-[0.75rem] px-3 py-1.5 border-primary/30 bg-primary/10 text-primary gap-1.5 hidden sm:flex">
+                <Flame size={12} weight="bold" />
                 v1.0.0
               </Badge>
             </div>
@@ -138,7 +142,7 @@ function App() {
         </Tabs>
       </main>
 
-      <footer className="border-t border-border bg-muted/30 mt-auto">
+      <footer className="border-t border-border bg-card/50 mt-auto">
         <div className="container mx-auto px-6 lg:px-8 py-12">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             <div>
@@ -191,6 +195,25 @@ function App() {
                   <span>Model Versioning</span>
                 </li>
               </ul>
+            </div>
+          </div>
+          <div className="mt-12 pt-8 border-t border-border/50 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <img 
+                src={blazeLogo} 
+                alt="Blaze Sports Intel" 
+                className="h-12 w-auto opacity-80"
+              />
+              <div className="text-[0.75rem] text-muted-foreground">
+                <div className="font-mono">COURAGE · GRIT · LEADERSHIP</div>
+                <div className="mt-1">© 2026 Blaze Sports Intel. All rights reserved.</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 text-[0.75rem] text-muted-foreground">
+              <span className="font-mono">MCP Server:</span>
+              <code className="px-2 py-1 bg-muted/30 rounded font-mono text-primary">
+                sabermetrics.blazesportsintel.com
+              </code>
             </div>
           </div>
         </div>

@@ -14,7 +14,8 @@ enabled = true
 # Secrets (set via: wrangler secret put MCP_API_KEY)
 # MCP_API_KEY - API key for authentication (leave unset for no auth)
 
-# Optional: Custom domain (requires Cloudflare zone)
-# routes = [
-#   { pattern = "mcp.yourdomain.com/*", zone_name = "yourdomain.com" }
-# ]
+# Custom domain configuration for Blaze Sports Intel
+# Uncomment after adding blazesportsintel.com zone to Cloudflare
+routes = [
+  { pattern = "sabermetrics.blazesportsintel.com/*", zone_name = "blazesportsintel.com" }
+]
