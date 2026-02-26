@@ -23,6 +23,9 @@ import { PageLoading } from '@/components/Loading';
 import { usePageLoading } from '@/hooks/use-loading';
 import { useIsMobile } from '@/hooks/use-mobile';
 import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
+import bsiLogoFull from '@/assets/images/bsi-logo-primary.webp';
+import bsiBanner from '@/assets/images/bsi-banner-horizontal.webp';
+import bsiHeroStadium from '@/assets/images/bsi-hero-stadium.webp';
 
 interface TabConfig {
   value: string;
@@ -55,8 +58,12 @@ function App() {
   ];
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/90">
+    <div className="min-h-screen bg-background flex flex-col relative">
+      <div 
+        className="fixed inset-0 z-0 opacity-[0.03] pointer-events-none bg-center bg-cover"
+        style={{ backgroundImage: `url(${bsiHeroStadium})` }}
+      />
+      <header className="sticky top-0 z-50 w-full border-b border-border bg-card/95 backdrop-blur-md supports-[backdrop-filter]:bg-card/90 relative">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex h-16 sm:h-20 lg:h-24 items-center justify-between gap-2 sm:gap-4">
             <div className="flex items-center gap-2 sm:gap-4 flex-1 min-w-0">
@@ -123,7 +130,7 @@ function App() {
         </div>
       </header>
 
-      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12">
+      <main className="flex-1 container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 lg:py-12 relative z-10">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           {!isMobile && (
             <div className="mb-6 sm:mb-8">
@@ -182,7 +189,7 @@ function App() {
         </Tabs>
       </main>
 
-      <footer className="border-t border-border bg-card/50 mt-auto">
+      <footer className="border-t border-border bg-card/50 mt-auto relative z-10">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 sm:gap-10 lg:gap-12">
             <div>
@@ -240,12 +247,12 @@ function App() {
           <div className="mt-8 sm:mt-10 lg:mt-12 pt-6 sm:pt-8 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
             <div className="flex items-center gap-2 sm:gap-3">
               <img 
-                src={blazeLogo} 
+                src={bsiLogoFull} 
                 alt="Blaze Sports Intel" 
-                className="h-10 sm:h-12 w-auto opacity-80"
+                className="h-12 sm:h-14 w-auto opacity-90"
               />
               <div className="text-[0.6875rem] sm:text-xs text-muted-foreground text-center sm:text-left">
-                <div className="font-mono">COURAGE · GRIT · LEADERSHIP</div>
+                <div className="font-mono font-semibold tracking-wider text-primary/80">COURAGE · GRIT · LEADERSHIP</div>
                 <div className="mt-1">© 2026 Blaze Sports Intel. All rights reserved.</div>
               </div>
             </div>
