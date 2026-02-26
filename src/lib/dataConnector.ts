@@ -235,7 +235,7 @@ function normaliseNCAAPlayByPlay(
         outs: 0,
         text: play.description ?? '',
         type: 'play',
-        scoringPlay: false,
+        scoringPlay: Boolean(play.score && String(play.score).trim() !== ''),
       });
     });
   });
