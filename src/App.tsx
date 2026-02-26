@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Database, ChartBar, Users, Trophy, Pulse, Code, Calculator, ChartLine, Baseball, Gear, List, X, TrendUp, CalendarDots, ChartLineUp } from '@phosphor-icons/react';
+import { Database, ChartBar, Users, Trophy, Pulse, Code, Calculator, ChartLine, Baseball, Gear, List, X, TrendUp, CalendarDots, ChartLineUp, Sparkle } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -16,10 +16,11 @@ import { RealTimeDashboard } from '@/components/RealTimeDashboard';
 import { TeamDetailView } from '@/components/TeamDetailView';
 import { LiveGameScores } from '@/components/LiveGameScores';
 import { TeamPerformanceCharts } from '@/components/TeamPerformanceCharts';
+import { HighlightlyDataDashboard } from '@/components/HighlightlyDataDashboard';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config' | 'teams' | 'live-scores' | 'trends';
+type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config' | 'teams' | 'live-scores' | 'trends' | 'highlightly';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
@@ -29,6 +30,7 @@ function App() {
 
   const navItems = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartLine },
+    { id: 'highlightly' as ViewType, label: 'Highlightly API', icon: Sparkle },
     { id: 'live-scores' as ViewType, label: 'Live Scores', icon: CalendarDots },
     { id: 'trends' as ViewType, label: 'Trends', icon: ChartLineUp },
     { id: 'api' as ViewType, label: 'API', icon: Code },
@@ -97,6 +99,7 @@ function App() {
 
   const viewTitles: Record<ViewType, string> = {
     dashboard: 'Dashboard',
+    highlightly: 'Highlightly API Integration',
     'live-scores': 'Live Scores & Schedules',
     trends: 'Performance Trends',
     teams: 'Team Details',
@@ -111,6 +114,7 @@ function App() {
 
   const viewDescriptions: Record<ViewType, string> = {
     dashboard: 'Real-time NCAA baseball analytics and platform metrics',
+    highlightly: 'MLB & College Baseball data from Highlightly API',
     'live-scores': 'Live game scores and schedules from ESPN',
     trends: 'Data visualization charts for team performance analysis',
     teams: 'Detailed team information with roster and statistics',
@@ -179,6 +183,7 @@ function App() {
               className="h-full"
             >
               {currentView === 'dashboard' && <RealTimeDashboard />}
+              {currentView === 'highlightly' && <HighlightlyDataDashboard />}
               {currentView === 'live-scores' && <LiveGameScores />}
               {currentView === 'trends' && <TeamPerformanceCharts />}
               {currentView === 'teams' && selectedTeamId && (

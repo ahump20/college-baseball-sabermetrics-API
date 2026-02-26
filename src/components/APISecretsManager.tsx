@@ -25,6 +25,13 @@ const defaultSecrets: APISecret[] = [
     required: true
   },
   {
+    name: 'Highlightly API Key',
+    key: 'HIGHLIGHTLY_API_KEY',
+    value: '0dd6501d-bd0f-4c6c-b653-084cafa3a995',
+    description: 'Highlightly MLB & College Baseball API access key',
+    required: true
+  },
+  {
     name: 'Blaze Client ID',
     key: 'BLAZE_CLIENT_ID',
     value: '',
