@@ -1,12 +1,13 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useKV } from '@github/spark/hooks';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Key, Check, Copy, Eye, EyeSlash, ShieldCheck } from '@phosphor-icons/react';
+import { Key, Check, Copy, Eye, EyeSlash, ShieldCheck, LockKey } from '@phosphor-icons/react';
 import { toast } from 'sonner';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 
 interface APISecret {
   name: string;
@@ -27,7 +28,7 @@ const defaultSecrets: APISecret[] = [
   {
     name: 'Highlightly API Key',
     key: 'HIGHLIGHTLY_API_KEY',
-    value: '0dd6501d-bd0f-4c6c-b653-084cafa3a995',
+    value: '',
     description: 'Highlightly MLB & College Baseball API access key',
     required: true
   },
@@ -57,6 +58,15 @@ const defaultSecrets: APISecret[] = [
 export function APISecretsManager() {
   const [secrets, setSecrets] = useKV<APISecret[]>('api-secrets', defaultSecrets);
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
+  const [isOwner, setIsOwner] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    window.spark.user().then(user => {
+      setIsOwner(user?.isOwner || false);
+    }).catch(() => {
+      setIsOwner(false);
+    });
+  }, []);
 
   const handleUpdateSecret = (index: number, value: string) => {
     setSecrets((current) => {
@@ -104,6 +114,39 @@ export function APISecretsManager() {
   const requiredSecretsConfigured = (secrets || [])
     .filter(s => s.required)
     .every(s => s.value.trim() !== '');
+
+  if (isOwner === null) {
+    return (
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center py-8">
+            <p className="text-muted-foreground">Loading...</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isOwner) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <LockKey size={24} weight="bold" className="text-destructive" />
+            Access Restricted
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <Alert>
+            <LockKey className="h-4 w-4" />
+            <AlertDescription>
+              This section contains sensitive API credentials and is only accessible to the application owner. API keys are never exposed publicly and are securely stored in environment variables.
+            </AlertDescription>
+          </Alert>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
