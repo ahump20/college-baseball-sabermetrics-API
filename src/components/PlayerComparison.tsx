@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -27,8 +27,11 @@ import {
   ChartBar,
   Target,
   Lightning,
+  CloudArrowDown,
 } from '@phosphor-icons/react';
 import { mockPlayers, type Player } from '@/lib/playerData';
+import { realDataService } from '@/lib/realDataService';
+import { toast } from 'sonner';
 
 export function PlayerComparison() {
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
@@ -38,14 +41,41 @@ export function PlayerComparison() {
   const [playerType, setPlayerType] = useState<'batting' | 'pitching'>('batting');
   const [compareMode, setCompareMode] = useState(false);
   const [selectedPlayers, setSelectedPlayers] = useState<string[]>([]);
+  const [useRealData, setUseRealData] = useState(false);
+  const [realPlayers, setRealPlayers] = useState<Player[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  const currentPlayers = useRealData ? realPlayers : mockPlayers;
 
   const divisions = ['all', 'D1', 'D2', 'D3'];
   const conferences = [
     'all',
-    ...Array.from(new Set(mockPlayers.map((p) => p.conference))),
+    ...Array.from(new Set(currentPlayers.map((p) => p.conference))),
   ];
   const battingPositions = ['all', 'C', '1B', '2B', '3B', 'SS', 'OF'];
   const pitchingPositions = ['all', 'SP', 'RP', 'CL'];
+
+  useEffect(() => {
+    if (useRealData && realPlayers.length === 0) {
+      loadRealPlayerData();
+    }
+  }, [useRealData, realPlayers.length]);
+
+  const loadRealPlayerData = async () => {
+    setLoading(true);
+    try {
+      const players = await realDataService.getRealPlayers();
+      setRealPlayers(players);
+      const cacheInfo = realDataService.getCacheInfo();
+      toast.success(`Loaded ${cacheInfo.playerCount} real players from ${cacheInfo.teamCount} teams via ESPN API`);
+    } catch (error) {
+      console.error('Error loading real data:', error);
+      toast.error('Failed to load real data. Using mock data instead.');
+      setUseRealData(false);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const battingMetrics = [
     { id: 'wrc_plus', label: 'wRC+', desc: 'Weighted Runs Created Plus' },
@@ -71,7 +101,7 @@ export function PlayerComparison() {
   ];
 
   const filterPlayers = (): Player[] => {
-    return mockPlayers.filter((player) => {
+    return currentPlayers.filter((player) => {
       if (selectedDivision !== 'all' && player.division !== selectedDivision) return false;
       if (selectedConference !== 'all' && player.conference !== selectedConference) return false;
       if (selectedPosition !== 'all' && player.position !== selectedPosition) return false;
@@ -302,7 +332,7 @@ export function PlayerComparison() {
   };
 
   const renderComparison = () => {
-    const selectedPlayerObjs = mockPlayers.filter((p) => selectedPlayers.includes(p.id));
+    const selectedPlayerObjs = currentPlayers.filter((p) => selectedPlayers.includes(p.id));
     const metrics = playerType === 'batting' ? battingMetrics : pitchingMetrics;
 
     if (selectedPlayerObjs.length === 0) {
@@ -493,12 +523,23 @@ export function PlayerComparison() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-2">Player Performance Comparison</h2>
-        <p className="text-muted-foreground">
-          Compare top performers across divisions with advanced sabermetrics, context-adjusted
-          metrics, and tracking data. View leaderboards or select players for head-to-head analysis.
-        </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h2 className="text-2xl font-semibold mb-2">Player Performance Comparison</h2>
+          <p className="text-muted-foreground">
+            Compare top performers across divisions with advanced sabermetrics, context-adjusted
+            metrics, and tracking data. View leaderboards or select players for head-to-head analysis.
+          </p>
+        </div>
+        <Button
+          onClick={() => setUseRealData(!useRealData)}
+          disabled={loading}
+          variant={useRealData ? 'default' : 'outline'}
+          className="gap-2 shrink-0"
+        >
+          <CloudArrowDown size={18} weight={loading ? 'bold' : 'regular'} />
+          {loading ? 'Loading...' : useRealData ? 'Real Data (ESPN)' : 'Mock Data'}
+        </Button>
       </div>
 
       <Card>
