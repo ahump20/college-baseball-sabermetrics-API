@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key, ListNumbers } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key, ListNumbers, User } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -14,6 +14,7 @@ import { PlayerComparison } from '@/components/PlayerComparison';
 import { GameScoreboard } from '@/components/GameScoreboard';
 import { APIAccessDocs } from '@/components/APIAccessDocs';
 import { PlayerLeaderboards } from '@/components/PlayerLeaderboards';
+import { PlayerProfile } from '@/components/PlayerProfile';
 import { PageLoading } from '@/components/Loading';
 import { usePageLoading } from '@/hooks/use-loading';
 import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
@@ -96,6 +97,10 @@ function App() {
                 <Users size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">Players</span>
               </TabsTrigger>
+              <TabsTrigger value="profiles" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+                <User size={18} weight="bold" />
+                <span className="font-medium text-[0.875rem]">Profiles</span>
+              </TabsTrigger>
               <TabsTrigger value="live" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
                 <Pulse size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">Live API</span>
@@ -146,6 +151,10 @@ function App() {
 
             <TabsContent value="players" className="mt-0 space-y-6">
               <PlayerComparison />
+            </TabsContent>
+
+            <TabsContent value="profiles" className="mt-0 space-y-6">
+              <PlayerProfile />
             </TabsContent>
 
             <TabsContent value="live" className="mt-0 space-y-6">
