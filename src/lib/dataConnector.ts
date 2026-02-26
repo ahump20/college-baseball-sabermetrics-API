@@ -174,31 +174,58 @@ function normaliseNCAABoxScore(
   gameId: string,
   data: NCAABoxScoreResponse
 ): UnifiedBoxScore {
-  const [awayData, homeData] = data.teams;
+  const teams = data.teams ?? [];
 
-  const toPeriodScores = (team: typeof homeData) =>
-    (team.periodScores ?? []).map((ps) => parseInt(ps.score || '0', 10));
+  // Prefer explicit home/away flags if available, fall back to positional order.
+  let homeData = teams.find((t) => (t as any).homeAway === 'home');
+  let awayData = teams.find((t) => (t as any).homeAway === 'away');
+
+  if (!homeData && teams.length > 1) {
+    homeData = teams[1];
+  } else if (!homeData && teams.length === 1) {
+    homeData = teams[0];
+  }
+
+  if (!awayData && teams.length > 0) {
+    // Choose a team that is not the identified home team, or default to index 0.
+    awayData = teams.find((t) => t !== homeData) ?? teams[0];
+  }
+
+  const toPeriodScores = (team: (typeof teams)[number]) =>
+    (team?.periodScores ?? []).map((ps) => parseInt(ps.score || '0', 10));
 
   const home: import('./espnGameData').BoxScoreTeam = {
-    id: homeData.names.seo ?? homeData.names.short,
-    displayName: homeData.names.full ?? homeData.names.short,
-    abbreviation: homeData.names.char6 ?? homeData.names.short,
+    id: homeData?.names.seo ?? homeData?.names.short ?? '',
+    displayName: homeData?.names.full ?? homeData?.names.short ?? '',
+    abbreviation: homeData?.names.char6 ?? homeData?.names.short ?? '',
     color: '000000',
-    score: parseInt(homeData.score || '0', 10),
-    hits: parseInt(homeData.stats?.['H'] ?? homeData.stats?.['hits'] ?? '0', 10),
-    errors: parseInt(homeData.stats?.['E'] ?? homeData.stats?.['errors'] ?? '0', 10),
-    runs: toPeriodScores(homeData),
+    score: parseInt(homeData?.score || '0', 10),
+    hits: parseInt(
+      homeData?.stats?.['H'] ?? homeData?.stats?.['hits'] ?? '0',
+      10
+    ),
+    errors: parseInt(
+      homeData?.stats?.['E'] ?? homeData?.stats?.['errors'] ?? '0',
+      10
+    ),
+    runs: homeData ? toPeriodScores(homeData) : [],
   };
 
   const away: import('./espnGameData').BoxScoreTeam = {
-    id: awayData.names.seo ?? awayData.names.short,
-    displayName: awayData.names.full ?? awayData.names.short,
-    abbreviation: awayData.names.char6 ?? awayData.names.short,
+    id: awayData?.names.seo ?? awayData?.names.short ?? '',
+    displayName: awayData?.names.full ?? awayData?.names.short ?? '',
+    abbreviation: awayData?.names.char6 ?? awayData?.names.short ?? '',
     color: '000000',
-    score: parseInt(awayData.score || '0', 10),
-    hits: parseInt(awayData.stats?.['H'] ?? awayData.stats?.['hits'] ?? '0', 10),
-    errors: parseInt(awayData.stats?.['E'] ?? awayData.stats?.['errors'] ?? '0', 10),
-    runs: toPeriodScores(awayData),
+    score: parseInt(awayData?.score || '0', 10),
+    hits: parseInt(
+      awayData?.stats?.['H'] ?? awayData?.stats?.['hits'] ?? '0',
+      10
+    ),
+    errors: parseInt(
+      awayData?.stats?.['E'] ?? awayData?.stats?.['errors'] ?? '0',
+      10
+    ),
+    runs: awayData ? toPeriodScores(awayData) : [],
   };
 
   return {
