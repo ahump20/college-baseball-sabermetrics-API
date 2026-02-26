@@ -42,6 +42,11 @@ import {
   GraduationCap,
   Ruler,
   Barbell,
+  Star,
+  Medal,
+  Fire,
+  Crown,
+  Sparkle,
 } from '@phosphor-icons/react';
 import { mockPlayers, type Player } from '@/lib/playerData';
 import { realDataService } from '@/lib/realDataService';
@@ -67,6 +72,16 @@ interface SeasonStats {
     batting?: any;
     pitching?: any;
   };
+}
+
+interface CareerHighlight {
+  id: string;
+  type: 'award' | 'milestone' | 'achievement' | 'record';
+  season: string;
+  title: string;
+  description: string;
+  icon: React.ElementType;
+  variant: 'default' | 'success' | 'warning' | 'primary';
 }
 
 export function PlayerProfile() {
@@ -337,6 +352,185 @@ export function PlayerProfile() {
     }
   };
 
+  const generateCareerHighlights = (player: Player, seasons: SeasonStats[]): CareerHighlight[] => {
+    const highlights: CareerHighlight[] = [];
+    const isPitcher = !!player.stats.pitching;
+    
+    if (isPitcher && player.stats.pitching) {
+      if (player.advancedStats.pitching?.war && player.advancedStats.pitching.war >= 3.0) {
+        highlights.push({
+          id: 'all-conf',
+          type: 'award',
+          season: '2025',
+          title: 'All-Conference Honors',
+          description: `${player.advancedStats.pitching.war.toFixed(1)} WAR ranked among conference leaders`,
+          icon: Medal,
+          variant: 'success',
+        });
+      }
+      
+      if (player.stats.pitching.era <= 2.50) {
+        highlights.push({
+          id: 'elite-era',
+          type: 'achievement',
+          season: '2025',
+          title: 'Elite ERA',
+          description: `${player.stats.pitching.era.toFixed(2)} ERA places in top tier nationally`,
+          icon: Star,
+          variant: 'primary',
+        });
+      }
+      
+      if (player.stats.pitching.so >= 100) {
+        highlights.push({
+          id: 'k-milestone',
+          type: 'milestone',
+          season: 'Career',
+          title: '100+ Strikeout Season',
+          description: `${player.stats.pitching.so} strikeouts in current season`,
+          icon: Fire,
+          variant: 'warning',
+        });
+      }
+      
+      if (player.advancedStats.pitching?.k_per_9 && player.advancedStats.pitching.k_per_9 >= 11.0) {
+        highlights.push({
+          id: 'k-rate',
+          type: 'achievement',
+          season: '2025',
+          title: 'Dominant K Rate',
+          description: `${player.advancedStats.pitching.k_per_9.toFixed(1)} K/9 shows elite strikeout ability`,
+          icon: Lightning,
+          variant: 'warning',
+        });
+      }
+      
+      if (player.stats.pitching.whip <= 1.00) {
+        highlights.push({
+          id: 'whip-master',
+          type: 'achievement',
+          season: '2025',
+          title: 'Command Excellence',
+          description: `${player.stats.pitching.whip.toFixed(2)} WHIP demonstrates exceptional control`,
+          icon: Target,
+          variant: 'success',
+        });
+      }
+      
+      if (player.trackingStats?.pitching?.fastball_velo_avg && player.trackingStats.pitching.fastball_velo_avg >= 95) {
+        highlights.push({
+          id: 'velo',
+          type: 'achievement',
+          season: '2025',
+          title: 'Power Arm',
+          description: `${player.trackingStats.pitching.fastball_velo_avg.toFixed(1)} MPH average fastball velocity`,
+          icon: Lightning,
+          variant: 'warning',
+        });
+      }
+      
+    } else if (player.stats.batting) {
+      if (player.advancedStats.batting?.war && player.advancedStats.batting.war >= 3.0) {
+        highlights.push({
+          id: 'all-american',
+          type: 'award',
+          season: '2025',
+          title: 'All-American Candidate',
+          description: `${player.advancedStats.batting.war.toFixed(1)} WAR among nation's elite`,
+          icon: Crown,
+          variant: 'success',
+        });
+      }
+      
+      if (player.stats.batting.avg >= 0.350) {
+        highlights.push({
+          id: 'avg-leader',
+          type: 'achievement',
+          season: '2025',
+          title: 'Batting Title Contender',
+          description: `.${Math.floor(player.stats.batting.avg * 1000)} average ranks among conference leaders`,
+          icon: Trophy,
+          variant: 'primary',
+        });
+      }
+      
+      if (player.stats.batting.hr >= 15) {
+        highlights.push({
+          id: 'power-threat',
+          type: 'milestone',
+          season: '2025',
+          title: 'Power Threat',
+          description: `${player.stats.batting.hr} home runs shows elite power`,
+          icon: Fire,
+          variant: 'warning',
+        });
+      }
+      
+      if (player.stats.batting.ops >= 1.000) {
+        highlights.push({
+          id: 'ops-elite',
+          type: 'achievement',
+          season: '2025',
+          title: 'Elite OPS',
+          description: `${player.stats.batting.ops.toFixed(3)} OPS demonstrates complete offensive package`,
+          icon: Star,
+          variant: 'primary',
+        });
+      }
+      
+      if (player.advancedStats.batting?.wrc_plus && player.advancedStats.batting.wrc_plus >= 150) {
+        highlights.push({
+          id: 'wrc-leader',
+          type: 'achievement',
+          season: '2025',
+          title: 'Run Creation Leader',
+          description: `${player.advancedStats.batting.wrc_plus} wRC+ shows elite offensive production`,
+          icon: ChartBar,
+          variant: 'success',
+        });
+      }
+      
+      if (player.stats.batting.sb >= 20 && player.stats.batting.cs <= 5) {
+        highlights.push({
+          id: 'speed-demon',
+          type: 'achievement',
+          season: '2025',
+          title: 'Base Stealing Threat',
+          description: `${player.stats.batting.sb} stolen bases with excellent success rate`,
+          icon: Lightning,
+          variant: 'warning',
+        });
+      }
+      
+      if (player.trackingStats?.batting?.exit_velo_avg && player.trackingStats.batting.exit_velo_avg >= 92) {
+        highlights.push({
+          id: 'exit-velo',
+          type: 'achievement',
+          season: '2025',
+          title: 'Hard Contact',
+          description: `${player.trackingStats.batting.exit_velo_avg.toFixed(1)} MPH avg exit velo shows raw power`,
+          icon: Target,
+          variant: 'warning',
+        });
+      }
+      
+      const careerHits = seasons.reduce((total, s) => total + (s.stats.batting?.h || 0), 0);
+      if (careerHits >= 200) {
+        highlights.push({
+          id: 'hit-milestone',
+          type: 'milestone',
+          season: 'Career',
+          title: '200+ Career Hits',
+          description: `${careerHits} career hits milestone achieved`,
+          icon: Sparkle,
+          variant: 'primary',
+        });
+      }
+    }
+    
+    return highlights;
+  };
+
   if (!selectedPlayer) {
     return (
       <div className="space-y-6">
@@ -514,6 +708,7 @@ export function PlayerProfile() {
   const seasonHistory = generateSeasonHistory(selectedPlayer);
   const isPitcher = !!selectedPlayer.stats.pitching;
   const careerTotals = calculateCareerTotals(seasonHistory, isPitcher ? 'pitching' : 'batting');
+  const careerHighlights = generateCareerHighlights(selectedPlayer, seasonHistory);
 
   return (
     <div className="space-y-6">
@@ -618,6 +813,36 @@ export function PlayerProfile() {
                       </div>
                     </div>
                   )}
+                </div>
+              )}
+
+              {careerHighlights.length > 0 && (
+                <div className="mb-4">
+                  <h3 className="text-sm font-semibold mb-3 flex items-center gap-2">
+                    <Trophy size={16} className="text-warning" />
+                    Career Highlights
+                  </h3>
+                  <div className="flex flex-wrap gap-2">
+                    {careerHighlights.slice(0, 4).map((highlight) => {
+                      const Icon = highlight.icon;
+                      const variantClasses = {
+                        default: 'border-border bg-card',
+                        success: 'border-success/30 bg-success/10 text-success',
+                        warning: 'border-warning/30 bg-warning/10 text-warning',
+                        primary: 'border-primary/30 bg-primary/10 text-primary',
+                      };
+                      return (
+                        <Badge
+                          key={highlight.id}
+                          variant="outline"
+                          className={`gap-1.5 ${variantClasses[highlight.variant]}`}
+                        >
+                          <Icon size={14} weight="bold" />
+                          {highlight.title}
+                        </Badge>
+                      );
+                    })}
+                  </div>
                 </div>
               )}
 
@@ -750,7 +975,7 @@ export function PlayerProfile() {
       </Card>
 
       <Tabs defaultValue="seasons" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-4">
+        <TabsList className="grid w-full max-w-2xl grid-cols-5">
           <TabsTrigger value="seasons" className="gap-2">
             <CalendarBlank size={16} />
             Seasons
@@ -758,6 +983,10 @@ export function PlayerProfile() {
           <TabsTrigger value="career" className="gap-2">
             <Trophy size={16} />
             Career
+          </TabsTrigger>
+          <TabsTrigger value="highlights" className="gap-2">
+            <Star size={16} />
+            Highlights
           </TabsTrigger>
           <TabsTrigger value="advanced" className="gap-2">
             <ChartBar size={16} />
@@ -975,6 +1204,151 @@ export function PlayerProfile() {
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="highlights" className="mt-6">
+          <div className="grid gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Trophy size={20} className="text-warning" />
+                  Career Highlights & Achievements
+                </CardTitle>
+                <CardDescription>
+                  Notable accomplishments and milestones throughout the player's career
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                {careerHighlights.length > 0 ? (
+                  <div className="grid gap-4 md:grid-cols-2">
+                    {careerHighlights.map((highlight) => {
+                      const Icon = highlight.icon;
+                      const variantColors = {
+                        default: 'border-border bg-card',
+                        success: 'border-success/30 bg-success/5',
+                        warning: 'border-warning/30 bg-warning/5',
+                        primary: 'border-primary/30 bg-primary/5',
+                      };
+                      const iconColors = {
+                        default: 'text-muted-foreground',
+                        success: 'text-success',
+                        warning: 'text-warning',
+                        primary: 'text-primary',
+                      };
+                      return (
+                        <div
+                          key={highlight.id}
+                          className={`p-4 rounded-lg border-2 ${variantColors[highlight.variant]} transition-all hover:shadow-md`}
+                        >
+                          <div className="flex items-start gap-3">
+                            <div className={`p-2 rounded-lg bg-background/50 ${iconColors[highlight.variant]}`}>
+                              <Icon size={24} weight="bold" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h3 className="font-semibold">{highlight.title}</h3>
+                                <Badge variant="outline" className="text-xs">
+                                  {highlight.season}
+                                </Badge>
+                              </div>
+                              <p className="text-sm text-muted-foreground">
+                                {highlight.description}
+                              </p>
+                              <div className="mt-2">
+                                <Badge variant="secondary" className="text-xs capitalize">
+                                  {highlight.type}
+                                </Badge>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <Trophy size={48} className="mx-auto text-muted-foreground/50 mb-3" />
+                    <p className="text-muted-foreground">
+                      Continue building your career to unlock achievements
+                    </p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <ChartBar size={20} className="text-primary" />
+                  Season Progression
+                </CardTitle>
+                <CardDescription>
+                  Year-over-year performance trends
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {seasonHistory.map((season, idx) => {
+                    const isCurrentSeason = idx === seasonHistory.length - 1;
+                    const prevSeason = idx > 0 ? seasonHistory[idx - 1] : null;
+                    
+                    let improvements: string[] = [];
+                    if (prevSeason) {
+                      if (!isPitcher && season.stats.batting && prevSeason.stats.batting) {
+                        if (season.stats.batting.avg > prevSeason.stats.batting.avg) {
+                          improvements.push(`AVG +${((season.stats.batting.avg - prevSeason.stats.batting.avg) * 1000).toFixed(0)} pts`);
+                        }
+                        if (season.stats.batting.hr > prevSeason.stats.batting.hr) {
+                          improvements.push(`+${season.stats.batting.hr - prevSeason.stats.batting.hr} HR`);
+                        }
+                        if (season.stats.batting.ops > prevSeason.stats.batting.ops) {
+                          improvements.push(`OPS +${((season.stats.batting.ops - prevSeason.stats.batting.ops) * 1000).toFixed(0)} pts`);
+                        }
+                      } else if (isPitcher && season.stats.pitching && prevSeason.stats.pitching) {
+                        if (season.stats.pitching.era < prevSeason.stats.pitching.era) {
+                          improvements.push(`ERA -${(prevSeason.stats.pitching.era - season.stats.pitching.era).toFixed(2)}`);
+                        }
+                        if (season.stats.pitching.so > prevSeason.stats.pitching.so) {
+                          improvements.push(`+${season.stats.pitching.so - prevSeason.stats.pitching.so} K`);
+                        }
+                        if (season.stats.pitching.whip < prevSeason.stats.pitching.whip) {
+                          improvements.push(`WHIP -${(prevSeason.stats.pitching.whip - season.stats.pitching.whip).toFixed(2)}`);
+                        }
+                      }
+                    }
+
+                    return (
+                      <div
+                        key={season.season}
+                        className={`p-4 rounded-lg border ${isCurrentSeason ? 'border-primary bg-primary/5' : 'border-border'}`}
+                      >
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold">{season.season}</span>
+                            {isCurrentSeason && (
+                              <Badge className="text-xs">Current</Badge>
+                            )}
+                          </div>
+                          <span className="text-sm text-muted-foreground">{season.games}G</span>
+                        </div>
+                        
+                        {improvements.length > 0 && (
+                          <div className="flex flex-wrap gap-2 mt-2">
+                            {improvements.map((improvement, i) => (
+                              <Badge key={i} variant="outline" className="text-xs gap-1 border-success/30 bg-success/10 text-success">
+                                <TrendUp size={12} weight="bold" />
+                                {improvement}
+                              </Badge>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="advanced" className="mt-6">
