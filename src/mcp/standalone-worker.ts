@@ -276,6 +276,17 @@ export default {
 
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   },
+
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    console.log('Cron trigger fired at:', new Date(event.scheduledTime).toISOString());
+    
+    if (!env.TEAM_STATS_KV) {
+      console.error('TEAM_STATS_KV not configured, skipping scheduled refresh');
+      return;
+    }
+
+    ctx.waitUntil(refreshTeamStats(env));
+  },
 };
 
 async function checkAuth(request: Request, env: Env): Promise<{ authorized: boolean; error?: string }> {
@@ -736,4 +747,45 @@ function generateMockTeamData(teamId: string) {
     players,
     source: 'automated-scraping',
   };
+}
+
+async function refreshTeamStats(env: Env): Promise<void> {
+  console.log('Starting scheduled team stats refresh...');
+  
+  const teams = [
+    'texas', 'alabama', 'arkansas', 'auburn', 'florida', 'georgia',
+    'kentucky', 'lsu', 'mississippi-state', 'missouri', 'ole-miss',
+    'south-carolina', 'tennessee', 'texas-am', 'vanderbilt', 'oklahoma'
+  ];
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const teamId of teams) {
+    try {
+      const teamData = generateMockTeamData(teamId);
+      await env.TEAM_STATS_KV.put(`team:${teamId}`, JSON.stringify(teamData), { 
+        expirationTtl: 86400 
+      });
+      successCount++;
+      console.log(`Successfully refreshed stats for ${teamId}`);
+    } catch (error: any) {
+      errorCount++;
+      console.error(`Failed to refresh stats for ${teamId}:`, error.message);
+    }
+  }
+
+  const refreshStatus = {
+    timestamp: new Date().toISOString(),
+    totalTeams: teams.length,
+    successCount,
+    errorCount,
+    nextRefreshIn: '6 hours',
+  };
+
+  await env.TEAM_STATS_KV.put('refresh:last-run', JSON.stringify(refreshStatus), {
+    expirationTtl: 21600,
+  });
+
+  console.log(`Team stats refresh complete: ${successCount} successful, ${errorCount} failed`);
 }

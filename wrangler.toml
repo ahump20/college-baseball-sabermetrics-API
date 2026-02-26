@@ -5,17 +5,20 @@ compatibility_date = "2024-01-01"
 [observability]
 enabled = true
 
-# KV Namespace for rate limiting (create with: wrangler kv:namespace create RATE_LIMIT_KV)
-# Uncomment and add your KV namespace ID after creating it
+# KV Namespaces
+# Run the deploy-mcp.sh script to automatically create these namespaces
+# Or create manually with:
+#   wrangler kv:namespace create RATE_LIMIT_KV
+#   wrangler kv:namespace create TEAM_STATS_KV
+# Then uncomment and paste the IDs below:
+
 # [[kv_namespaces]]
 # binding = "RATE_LIMIT_KV"
-# id = "your-kv-namespace-id-here"
+# id = "YOUR_RATE_LIMIT_KV_ID_HERE"
 
-# KV Namespace for team stats caching (create with: wrangler kv:namespace create TEAM_STATS_KV)
-# Uncomment and add your KV namespace ID after creating it
 # [[kv_namespaces]]
 # binding = "TEAM_STATS_KV"
-# id = "your-team-stats-kv-namespace-id-here"
+# id = "YOUR_TEAM_STATS_KV_ID_HERE"
 
 # Secrets (set via: wrangler secret put BSI_API_KEY)
 # BSI_API_KEY - API key for authentication (leave unset for no auth)
@@ -30,6 +33,6 @@ routes = [
 hostname = "sabermetrics.blazesportsintel.com"
 
 # Cron triggers for automated data scraping
-# Run daily at 6 AM UTC to refresh Texas stats
+# Run every 6 hours to refresh team stats (at 00:00, 06:00, 12:00, 18:00 UTC)
 [triggers]
-crons = ["0 6 * * *"]
+crons = ["0 */6 * * *"]

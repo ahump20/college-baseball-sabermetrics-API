@@ -229,25 +229,30 @@ Claude should use `calculate_batting_metrics` and explain wOBA, wRC+, ISO, etc.
 
 ## Step 7: Optional - Add Security
 
-### 7.1: Create KV namespace for rate limiting
+### 7.1: Create KV namespaces for rate limiting and team stats
 
 ```bash
 wrangler kv:namespace create RATE_LIMIT_KV
+wrangler kv:namespace create TEAM_STATS_KV
 ```
 
-Copy the namespace ID from output (looks like: `id = "abc123def456..."`).
+Copy both namespace IDs from output (looks like: `id = "abc123def456..."`).
 
 ### 7.2: Update wrangler.toml
 
-Uncomment and update the KV binding in `wrangler.toml`:
+Uncomment and update the KV bindings in `wrangler.toml`:
 
 ```toml
 [[kv_namespaces]]
 binding = "RATE_LIMIT_KV"
-id = "YOUR_KV_NAMESPACE_ID"
+id = "YOUR_RATE_LIMIT_KV_ID"
+
+[[kv_namespaces]]
+binding = "TEAM_STATS_KV"
+id = "YOUR_TEAM_STATS_KV_ID"
 ```
 
-Replace `YOUR_KV_NAMESPACE_ID` with the ID from step 7.1.
+Replace the IDs with the values from step 7.1.
 
 ### 7.3: Set API key secret
 
@@ -283,6 +288,25 @@ The API enforces the following rate limits per API key:
   - `X-RateLimit-Limit`: Maximum requests allowed
   - `X-RateLimit-Remaining`: Requests remaining in current window
   - `X-RateLimit-Reset`: Timestamp when limit resets
+
+### 7.7: Automated Data Refresh
+
+The Worker includes scheduled cron triggers that automatically refresh team stats:
+- **Frequency:** Every 6 hours (at 00:00, 06:00, 12:00, 18:00 UTC)
+- **Purpose:** Keeps SEC team stats fresh without manual intervention
+- **Storage:** Cached in TEAM_STATS_KV with 24-hour expiration
+- **Monitoring:** Check refresh status with `GET /api/scrape-status`
+
+To view the last refresh:
+```bash
+curl https://sabermetrics.blazesportsintel.com/api/scrape-status
+```
+
+The cron trigger configuration is in `wrangler.toml`:
+```toml
+[triggers]
+crons = ["0 */6 * * *"]
+```
 
 ---
 

@@ -2,6 +2,48 @@
 
 A production-ready **NCAA Analytics Platform** with real-time game data, advanced sabermetrics, and **Model Context Protocol (MCP)** integration for Claude.ai and other AI assistants.
 
+---
+
+## 🚨 FIXING CLAUDE.AI CONNECTION ERROR?
+
+### 👉 **[🔥_START_HERE_🔥.txt](🔥_START_HERE_🔥.txt)** ⭐ **READ THIS FIRST!**
+
+### Quick Reference Guides
+
+**👉 [CHEAT_SHEET.md](CHEAT_SHEET.md)** - ONE PAGE with all commands and settings
+
+**👉 [MCP_CONNECTION_FIX.md](MCP_CONNECTION_FIX.md)** - 5-minute quick fix guide
+
+**👉 [TROUBLESHOOTING_CLAUDE_MCP.md](TROUBLESHOOTING_CLAUDE_MCP.md)** - Detailed error diagnostics
+
+### Quick Fix Commands
+
+```bash
+# 1. Make scripts executable
+bash make-executable.sh
+
+# 2. Test your connection
+./test-claude-connection.sh
+
+# 3. Deploy if needed
+./deploy-mcp.sh
+```
+
+### Your Claude.ai Connection Details
+
+**Server URL:**
+```
+https://sabermetrics.blazesportsintel.com/mcp
+```
+
+**Custom Header:**
+```
+Key:   Authorization
+Value: Bearer bsi_mcp_83453667ea265aa73a3ccae226cc0003ba006b27a
+```
+
+---
+
 ## 🎯 What's Built
 
 - ✅ **Live college baseball scores** from ESPN API
@@ -10,24 +52,21 @@ A production-ready **NCAA Analytics Platform** with real-time game data, advance
 - ✅ **Advanced sabermetrics calculator** (wOBA, FIP, OPS+, ISO, BABIP, etc.)
 - ✅ **Interactive ERD & schema viewer** for database design
 - ✅ **Player & team comparison tools**
-- ✅ **MCP Server** ready to deploy to Cloudflare Workers
+- ✅ **MCP Server** deployed to Cloudflare Workers
+- ✅ **Claude.ai integration** with authentication
 
-## 🚀 READY TO DEPLOY?
+## 🚀 Documentation Index
 
-### ⚡ Quick Start (10 minutes)
-**[`QUICK_START.md`](QUICK_START.md)** - Run these commands to go live immediately
+### Essential Guides (Start Here)
+- **[START_HERE.md](START_HERE.md)** ⭐ **Main index and quick start**
+- **[MCP_CONNECTION_FIX.md](MCP_CONNECTION_FIX.md)** - Fix Claude.ai connection errors
+- **[TROUBLESHOOTING_CLAUDE_MCP.md](TROUBLESHOOTING_CLAUDE_MCP.md)** - Detailed troubleshooting
 
-### 📑 All Deployment Documentation
-**[`DEPLOYMENT_DOCUMENTATION_INDEX.md`](DEPLOYMENT_DOCUMENTATION_INDEX.md)** - Complete index of all guides
-
-### 📋 Complete Deployment Guide
-**[`PRODUCTION_DEPLOYMENT_STEPS.md`](PRODUCTION_DEPLOYMENT_STEPS.md)** - Full walkthrough with credentials and commands
-
-### 🤖 Connect to Claude.ai
-**[`CLAUDE_MCP_SETUP.md`](CLAUDE_MCP_SETUP.md)** - Step-by-step Claude.ai integration
-
-### ✅ Deployment Summary
-**[`DEPLOYMENT_READY.md`](DEPLOYMENT_READY.md)** - Executive overview and architecture
+### Deployment & Setup
+- **[QUICK_START.md](QUICK_START.md)** - 10-minute deployment guide
+- **[CLAUDE_MCP_SETUP.md](CLAUDE_MCP_SETUP.md)** - Claude.ai integration guide
+- **[DEPLOYMENT_DOCUMENTATION_INDEX.md](DEPLOYMENT_DOCUMENTATION_INDEX.md)** - All deployment docs
+- **[PRODUCTION_DEPLOYMENT_STEPS.md](PRODUCTION_DEPLOYMENT_STEPS.md)** - Step-by-step deployment
 
 ---
 

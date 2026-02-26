@@ -81,6 +81,13 @@ The platform now implements a strict, testable design system with:
 - **Progression**: View division overview → Drill into conferences → See tracking penetration (TrackMan/PitchCom) → Understand graceful degradation
 - **Success**: Users understand why coverage-aware analytics matter and how metrics adapt
 
+### Automated Data Refresh (Cron)
+- **Functionality**: Cloudflare Workers scheduled events automatically refresh SEC team stats every 6 hours
+- **Purpose**: Ensure team and player data stays fresh without manual intervention or external scheduling infrastructure
+- **Trigger**: Automatic at 00:00, 06:00, 12:00, and 18:00 UTC daily
+- **Progression**: Cron fires → Worker fetches data for all 16 SEC teams → Processes batting stats → Stores in KV cache with 24-hour TTL → Logs success/error counts → Updates refresh status
+- **Success**: Stats are never more than 6 hours old, zero-maintenance data freshness, full observability via /api/scrape-status endpoint
+
 ## Edge Case Handling
 
 - **Missing tracking data** - Gracefully degrade to box-only or PBP-only metrics with clear coverage flags
