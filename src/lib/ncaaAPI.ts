@@ -146,7 +146,6 @@ export interface NCAARankingsResponse {
 
 class RateLimiter {
   private queue: Array<() => void> = [];
-  private running = 0;
   private readonly maxPerSecond: number;
   private lastWindowStart = Date.now();
   private countInWindow = 0;
