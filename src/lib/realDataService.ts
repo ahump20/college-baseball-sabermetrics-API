@@ -35,7 +35,7 @@ export class RealDataService {
     // Always use embedded real player data (sourced from 2024 NCAA season)
     cache.players = [...realPlayers];
 
-    if (!this.shouldRefresh() && cache.teams.size > 0) {
+    if (!this.shouldRefresh()) {
       return;
     }
 
