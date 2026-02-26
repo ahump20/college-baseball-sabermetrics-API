@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -9,6 +9,7 @@ import { CoverageDashboard } from '@/components/CoverageDashboard';
 import { LiveAPISimulator } from '@/components/LiveAPISimulator';
 import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
+import { PlayerComparison } from '@/components/PlayerComparison';
 
 function App() {
   const [activeTab, setActiveTab] = useState('api');
@@ -35,7 +36,7 @@ function App() {
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-8 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-9 lg:w-auto lg:inline-grid">
             <TabsTrigger value="api" className="gap-2">
               <Code size={16} />
               <span className="hidden sm:inline">API</span>
@@ -55,6 +56,10 @@ function App() {
             <TabsTrigger value="comparison" className="gap-2">
               <ArrowsLeftRight size={16} />
               <span className="hidden sm:inline">Compare</span>
+            </TabsTrigger>
+            <TabsTrigger value="players" className="gap-2">
+              <Users size={16} />
+              <span className="hidden sm:inline">Players</span>
             </TabsTrigger>
             <TabsTrigger value="live" className="gap-2">
               <Pulse size={16} />
@@ -89,6 +94,10 @@ function App() {
 
             <TabsContent value="comparison" className="mt-0">
               <ComparisonTool />
+            </TabsContent>
+
+            <TabsContent value="players" className="mt-0">
+              <PlayerComparison />
             </TabsContent>
 
             <TabsContent value="live" className="mt-0">
