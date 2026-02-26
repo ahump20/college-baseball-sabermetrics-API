@@ -203,6 +203,7 @@ export interface TeamStats {
 
 export class SECTeamScraper {
   private team: SECTeamConfig;
+  private pdfjsLib: any = null;
 
   constructor(teamId: string) {
     const team = Object.values(SEC_TEAMS).find(t => t.id === teamId);
@@ -212,7 +213,24 @@ export class SECTeamScraper {
     this.team = team;
   }
 
+  private async ensurePdfJs() {
+    if (!this.pdfjsLib) {
+      this.pdfjsLib = await import('pdfjs-dist');
+      this.pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${this.pdfjsLib.version}/pdf.worker.min.js`;
+    }
+    return this.pdfjsLib;
+  }
+
   async scrapeTeamStats(): Promise<TeamStats> {
+    try {
+      const pdfStats = await this.scrapePdfStats();
+      if (pdfStats) {
+        return pdfStats;
+      }
+    } catch (error) {
+      console.warn(`PDF scraping failed for ${this.team.name}:`, error);
+    }
+
     try {
       const webStats = await this.scrapeWebStats();
       if (webStats) {
@@ -223,6 +241,238 @@ export class SECTeamScraper {
     }
 
     return this.generateMockData();
+  }
+
+  private async scrapePdfStats(): Promise<TeamStats | null> {
+    if (!this.team.statsPdfPattern) {
+      return null;
+    }
+
+    try {
+      const pdfUrl = await this.discoverPdfUrl();
+      if (!pdfUrl) {
+        return null;
+      }
+
+      const pdfText = await this.fetchPdfText(pdfUrl);
+      const players = this.parsePdfStats(pdfText);
+
+      return {
+        teamId: this.team.id,
+        teamName: this.team.name,
+        season: '2026',
+        lastUpdated: new Date().toISOString(),
+        players,
+        source: 'pdf',
+      };
+    } catch (error) {
+      console.error(`PDF scraping failed for ${this.team.name}:`, error);
+      return null;
+    }
+  }
+
+  private async discoverPdfUrl(): Promise<string | null> {
+    const year = new Date().getFullYear();
+    const month = new Date().getMonth() + 1;
+    const day = new Date().getDate();
+    
+    const possibleUrls = [
+      `${this.team.baseUrl}/documents/${year}/${month}/${day}/Season-Stats.pdf`,
+      `${this.team.baseUrl}/documents/${year}/${month}/${day}/Baseball-Stats.pdf`,
+      `${this.team.baseUrl}/documents/${year}/${month}/${day - 1}/Season-Stats.pdf`,
+      `${this.team.baseUrl}/sports/baseball/stats.pdf`,
+    ];
+
+    for (const url of possibleUrls) {
+      try {
+        const response = await fetch(`/api/proxy`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url, method: 'HEAD' }),
+        });
+        
+        if (response.ok) {
+          return url;
+        }
+      } catch {
+        continue;
+      }
+    }
+
+    return null;
+  }
+
+  private async fetchPdfText(url: string): Promise<string> {
+    const response = await fetch(`/api/proxy`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url, responseType: 'arrayBuffer' }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch PDF: ${response.status}`);
+    }
+
+    const result = await response.json();
+    if (result.error) {
+      throw new Error(result.error);
+    }
+
+    const arrayBuffer = this.base64ToArrayBuffer(result.data);
+    return await this.extractTextFromPdf(arrayBuffer);
+  }
+
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
+  private async extractTextFromPdf(arrayBuffer: ArrayBuffer): Promise<string> {
+    try {
+      const pdfjs = await this.ensurePdfJs();
+      const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      
+      let fullText = '';
+      
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        
+        fullText += pageText + '\n';
+      }
+      
+      return fullText;
+    } catch (error) {
+      console.error('PDF.js extraction failed:', error);
+      throw error;
+    }
+  }
+
+  private parsePdfStats(text: string): TeamPlayerStats[] {
+    const players: TeamPlayerStats[] = [];
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+    
+    let isBattingSection = false;
+    let isPitchingSection = false;
+
+    for (const line of lines) {
+      if (line.match(/BATTING\s+STATISTICS/i)) {
+        isBattingSection = true;
+        isPitchingSection = false;
+        continue;
+      }
+      if (line.match(/PITCHING\s+STATISTICS/i)) {
+        isBattingSection = false;
+        isPitchingSection = true;
+        continue;
+      }
+
+      if (isBattingSection) {
+        const player = this.parseBattingLine(line);
+        if (player) players.push(player);
+      } else if (isPitchingSection) {
+        const player = this.parsePitchingLine(line);
+        if (player) {
+          const existing = players.find(p => p.name === player.name);
+          if (existing) {
+            existing.pitching = player.pitching;
+          } else {
+            players.push(player);
+          }
+        }
+      }
+    }
+
+    return players;
+  }
+
+  private parseBattingLine(line: string): TeamPlayerStats | null {
+    const parts = line.split(/\s+/);
+    if (parts.length < 15) return null;
+
+    const nameMatch = line.match(/^(\d+)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+    if (!nameMatch) return null;
+
+    const jerseyNumber = nameMatch[1];
+    const name = nameMatch[2];
+    const statsStart = line.indexOf(name) + name.length;
+    const statsText = line.substring(statsStart).trim();
+    const stats = statsText.split(/\s+/).map(s => s.replace(/[^\d.]/g, '')).filter(s => s.length > 0);
+
+    if (stats.length < 15) return null;
+
+    return {
+      playerId: `${this.team.id}-${name.toLowerCase().replace(/\s+/g, '-')}`,
+      name,
+      position: stats[0] || 'UTIL',
+      year: stats[1],
+      jerseyNumber,
+      batting: {
+        gp: parseInt(stats[2]) || 0,
+        ab: parseInt(stats[3]) || 0,
+        r: parseInt(stats[4]) || 0,
+        h: parseInt(stats[5]) || 0,
+        doubles: parseInt(stats[6]) || 0,
+        triples: parseInt(stats[7]) || 0,
+        hr: parseInt(stats[8]) || 0,
+        rbi: parseInt(stats[9]) || 0,
+        bb: parseInt(stats[10]) || 0,
+        so: parseInt(stats[11]) || 0,
+        sb: parseInt(stats[12]) || 0,
+        cs: parseInt(stats[13]) || 0,
+        avg: parseFloat(stats[14]) || 0.000,
+        obp: parseFloat(stats[15]) || 0.000,
+        slg: parseFloat(stats[16]) || 0.000,
+        ops: parseFloat(stats[17]) || 0.000,
+      },
+    };
+  }
+
+  private parsePitchingLine(line: string): TeamPlayerStats | null {
+    const parts = line.split(/\s+/);
+    if (parts.length < 12) return null;
+
+    const nameMatch = line.match(/^(\d+)?\s*([A-Z][a-z]+(?:\s+[A-Z][a-z]+)+)/);
+    if (!nameMatch) return null;
+
+    const jerseyNumber = nameMatch[1];
+    const name = nameMatch[2];
+    const statsStart = line.indexOf(name) + name.length;
+    const statsText = line.substring(statsStart).trim();
+    const stats = statsText.split(/\s+/).map(s => s.replace(/[^\d.]/g, '')).filter(s => s.length > 0);
+
+    if (stats.length < 12) return null;
+
+    return {
+      playerId: `${this.team.id}-${name.toLowerCase().replace(/\s+/g, '-')}`,
+      name,
+      position: 'P',
+      jerseyNumber,
+      pitching: {
+        gp: parseInt(stats[0]) || 0,
+        gs: parseInt(stats[1]) || 0,
+        w: parseInt(stats[2]) || 0,
+        l: parseInt(stats[3]) || 0,
+        sv: parseInt(stats[4]) || 0,
+        ip: parseFloat(stats[5]) || 0.0,
+        h: parseInt(stats[6]) || 0,
+        r: parseInt(stats[7]) || 0,
+        er: parseInt(stats[8]) || 0,
+        bb: parseInt(stats[9]) || 0,
+        so: parseInt(stats[10]) || 0,
+        era: parseFloat(stats[11]) || 0.00,
+        whip: parseFloat(stats[12]) || 0.00,
+      },
+    };
   }
 
   private async scrapeWebStats(): Promise<TeamStats | null> {

@@ -90,21 +90,44 @@ export interface TexasTeamStats {
 export class TexasPdfScraper {
   private readonly TEXAS_BASE_URL = 'https://texaslonghorns.com';
   private readonly DOCUMENTS_PATH = '/documents';
+  private pdfjsLib: any = null;
+  
+  private async ensurePdfJs() {
+    if (!this.pdfjsLib) {
+      this.pdfjsLib = await import('pdfjs-dist');
+      this.pdfjsLib.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${this.pdfjsLib.version}/pdf.worker.min.js`;
+    }
+    return this.pdfjsLib;
+  }
   
   async fetchPdfText(url: string): Promise<string> {
     try {
-      const response = await fetch(url, {
-        method: 'GET',
+      const proxyUrl = `/api/proxy`;
+      
+      const response = await fetch(proxyUrl, {
+        method: 'POST',
         headers: {
-          'User-Agent': 'Mozilla/5.0 (compatible; BSI-Scraper/1.0)',
+          'Content-Type': 'application/json',
         },
+        body: JSON.stringify({
+          url,
+          responseType: 'arrayBuffer',
+        }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to fetch PDF: ${response.status} ${response.statusText}`);
+        console.warn(`PDF fetch failed (${response.status}), falling back to mock data`);
+        throw new Error(`Failed to fetch PDF: ${response.status}`);
       }
 
-      const arrayBuffer = await response.arrayBuffer();
+      const result = await response.json();
+      
+      if (result.error) {
+        console.warn(`PDF fetch error: ${result.error}, falling back to mock data`);
+        throw new Error(result.error);
+      }
+
+      const arrayBuffer = this.base64ToArrayBuffer(result.data);
       
       return await this.extractTextFromPdf(arrayBuffer);
     } catch (error) {
@@ -113,7 +136,43 @@ export class TexasPdfScraper {
     }
   }
 
+  private base64ToArrayBuffer(base64: string): ArrayBuffer {
+    const binaryString = atob(base64);
+    const bytes = new Uint8Array(binaryString.length);
+    for (let i = 0; i < binaryString.length; i++) {
+      bytes[i] = binaryString.charCodeAt(i);
+    }
+    return bytes.buffer;
+  }
+
   private async extractTextFromPdf(arrayBuffer: ArrayBuffer): Promise<string> {
+    try {
+      const pdfjs = await this.ensurePdfJs();
+      
+      const loadingTask = pdfjs.getDocument({ data: arrayBuffer });
+      const pdf = await loadingTask.promise;
+      
+      let fullText = '';
+      
+      for (let pageNum = 1; pageNum <= pdf.numPages; pageNum++) {
+        const page = await pdf.getPage(pageNum);
+        const textContent = await page.getTextContent();
+        
+        const pageText = textContent.items
+          .map((item: any) => item.str)
+          .join(' ');
+        
+        fullText += pageText + '\n';
+      }
+      
+      return fullText;
+    } catch (error) {
+      console.error('PDF.js extraction failed, using fallback parser:', error);
+      return this.extractTextFromPdfFallback(arrayBuffer);
+    }
+  }
+
+  private extractTextFromPdfFallback(arrayBuffer: ArrayBuffer): string {
     const bytes = new Uint8Array(arrayBuffer);
     let text = '';
     
