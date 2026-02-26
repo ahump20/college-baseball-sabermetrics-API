@@ -499,7 +499,7 @@ export function PlayerComparison() {
         <div className="flex items-center gap-3 mb-2">
           <h2 className="text-2xl font-semibold">Player Performance Comparison</h2>
           <Badge variant="outline" className="font-mono text-[0.7rem] px-2 py-0.5">
-            {isLoading ? 'Loading...' : dataSource === 'espn' ? '📡 ESPN Live' : '📊 2024 NCAA Data'}
+            {isLoading ? 'Loading...' : dataSource === 'espn' ? '📡 ESPN Enriched' : '📊 2024 NCAA Data'}
           </Badge>
         </div>
         <p className="text-muted-foreground">
