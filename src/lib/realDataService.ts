@@ -60,6 +60,8 @@ export class RealDataService {
     } catch (error) {
       console.warn('ESPN API unavailable, using embedded real data:', error);
       // Embedded player data is already set above, so the app still works
+      // Prevent tight retry loops by updating the cache timestamp even on failure
+      cache.lastUpdate = Date.now();
     }
   }
 
