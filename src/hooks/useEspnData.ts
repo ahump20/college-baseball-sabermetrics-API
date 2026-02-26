@@ -6,7 +6,8 @@ interface UseEspnDataResult {
   players: Player[];
   teams: ESPNTeam[];
   isLoading: boolean;
-  dataSource: 'espn' | 'embedded';
+  /** Indicates whether the ESPN team list was successfully fetched ('espn') or only embedded data is used ('embedded'). Players are always from the embedded 2024 dataset. */
+  teamsSource: 'espn' | 'embedded';
   error: string | null;
 }
 
@@ -18,7 +19,7 @@ interface UseEspnDataResult {
 export function useEspnData(): UseEspnDataResult {
   const [teams, setTeams] = useState<ESPNTeam[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [dataSource, setDataSource] = useState<'espn' | 'embedded'>('embedded');
+  const [teamsSource, setTeamsSource] = useState<'espn' | 'embedded'>('embedded');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -29,12 +30,12 @@ export function useEspnData(): UseEspnDataResult {
         const response = await espnAPI.getTeams();
         if (!cancelled && response.teams?.length > 0) {
           setTeams(response.teams);
-          setDataSource('espn');
+          setTeamsSource('espn');
         }
       } catch (err) {
         if (!cancelled) {
           setError(err instanceof Error ? err.message : 'Failed to fetch ESPN data');
-          setDataSource('embedded');
+          setTeamsSource('embedded');
         }
       } finally {
         if (!cancelled) {
@@ -54,7 +55,7 @@ export function useEspnData(): UseEspnDataResult {
     players: realPlayers,
     teams,
     isLoading,
-    dataSource,
+    teamsSource,
     error,
   };
 }

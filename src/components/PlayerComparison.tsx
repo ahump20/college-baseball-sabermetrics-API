@@ -32,7 +32,7 @@ import { type Player } from '@/lib/playerData';
 import { useEspnData } from '@/hooks/useEspnData';
 
 export function PlayerComparison() {
-  const { players, dataSource, isLoading } = useEspnData();
+  const { players, teamsSource, isLoading } = useEspnData();
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
   const [selectedConference, setSelectedConference] = useState<string>('all');
   const [selectedPosition, setSelectedPosition] = useState<string>('all');
@@ -499,7 +499,7 @@ export function PlayerComparison() {
         <div className="flex items-center gap-3 mb-2">
           <h2 className="text-2xl font-semibold">Player Performance Comparison</h2>
           <Badge variant="outline" className="font-mono text-[0.7rem] px-2 py-0.5">
-            {isLoading ? 'Loading...' : dataSource === 'espn' ? '📡 ESPN Enriched' : '📊 2024 NCAA Data'}
+            {isLoading ? 'Loading...' : teamsSource === 'espn' ? '📡 ESPN Enriched' : '📊 2024 NCAA Data'}
           </Badge>
         </div>
         <p className="text-muted-foreground">

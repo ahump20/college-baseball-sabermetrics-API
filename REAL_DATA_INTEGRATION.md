@@ -51,8 +51,8 @@ Coordinates between embedded real data and ESPN API:
 Provides real player data to components:
 
 - Returns embedded real player data immediately (no loading delay for player stats)
-- Attempts ESPN team list fetch in the background
-- Shows data source indicator ("ESPN Live" or "2024 NCAA Data")
+- Attempts ESPN team list fetch in the background for team enrichment
+- Shows data source indicator ("ESPN Enriched" when teams are fetched from ESPN, or "2024 NCAA Data" when only embedded data is used)
 
 ## Architecture
 
@@ -96,10 +96,10 @@ Base URL: `https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseba
 import { useEspnData } from '@/hooks/useEspnData';
 
 function MyComponent() {
-  const { players, teams, dataSource, isLoading } = useEspnData();
+  const { players, teams, teamsSource, isLoading } = useEspnData();
   // players = real 2024 NCAA player data
   // teams = ESPN team list (if available)
-  // dataSource = 'espn' | 'embedded'
+  // teamsSource = 'espn' | 'embedded' (reflects whether ESPN teams were fetched)
 }
 
 // Direct ESPN API usage:

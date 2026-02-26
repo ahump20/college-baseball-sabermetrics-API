@@ -67,7 +67,7 @@ export class RealDataService {
 
   async getRealPlayers(): Promise<Player[]> {
     await this.loadRealData();
-    return cache.players;
+    return cache.players.slice();
   }
 
   async getRealTeams(): Promise<ESPNTeam[]> {
