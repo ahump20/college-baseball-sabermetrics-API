@@ -33,7 +33,7 @@ export class RealDataService {
 
   async loadRealData(): Promise<void> {
     // Always use embedded real player data (sourced from 2024 NCAA season)
-    cache.players = realPlayers;
+    cache.players = [...realPlayers];
 
     if (!this.shouldRefresh() && cache.teams.size > 0) {
       return;
