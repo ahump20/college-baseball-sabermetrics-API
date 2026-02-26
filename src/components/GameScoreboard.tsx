@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
   Table,
   TableBody,
@@ -12,7 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ArrowClockwise, Baseball, Calendar, MapPin, Users } from '@phosphor-icons/react';
+import { ArrowClockwise, Baseball, Calendar, MapPin, Users, Pulse } from '@phosphor-icons/react';
 import { espnGameData, type GameBoxScore } from '@/lib/espnGameData';
 import type { ESPNGame } from '@/lib/espnAPI';
 import { toast } from 'sonner';
@@ -24,25 +26,136 @@ export function GameScoreboard() {
   const [loading, setLoading] = useState(false);
   const [boxScoreLoading, setBoxScoreLoading] = useState(false);
   const [daysBack, setDaysBack] = useState(3);
+  const [autoRefresh, setAutoRefresh] = useState(true);
+  const [refreshInterval, setRefreshInterval] = useState(30);
+  const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(30);
+  const [lastRefresh, setLastRefresh] = useState<Date | null>(null);
+  
+  const refreshTimerRef = useRef<number | null>(null);
+  const countdownTimerRef = useRef<number | null>(null);
+  const previousScoresRef = useRef<Map<string, { home: string; away: string }>>(new Map());
 
   useEffect(() => {
     loadGames();
   }, [daysBack]);
+
+  useEffect(() => {
+    if (autoRefresh && hasLiveGames()) {
+      startAutoRefresh();
+    } else {
+      stopAutoRefresh();
+    }
+    
+    return () => {
+      stopAutoRefresh();
+    };
+  }, [autoRefresh, refreshInterval, games]);
+
+  const hasLiveGames = () => {
+    return games.some(game => game.status?.type?.state === 'in');
+  };
+
+  const startAutoRefresh = () => {
+    stopAutoRefresh();
+    
+    setSecondsUntilRefresh(refreshInterval);
+    
+    refreshTimerRef.current = window.setInterval(() => {
+      refreshLiveGames();
+    }, refreshInterval * 1000);
+    
+    countdownTimerRef.current = window.setInterval(() => {
+      setSecondsUntilRefresh((prev) => {
+        if (prev <= 1) {
+          return refreshInterval;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
+
+  const stopAutoRefresh = () => {
+    if (refreshTimerRef.current !== null) {
+      clearInterval(refreshTimerRef.current);
+      refreshTimerRef.current = null;
+    }
+    if (countdownTimerRef.current !== null) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+  };
+
+  const refreshLiveGames = async () => {
+    try {
+      const fetchedGames = await espnGameData.getRecentGames(daysBack);
+      
+      const scoreChanges: string[] = [];
+      fetchedGames.forEach(game => {
+        const competition = game.competitions?.[0];
+        const homeTeam = competition?.competitors?.find(c => c.homeAway === 'home');
+        const awayTeam = competition?.competitors?.find(c => c.homeAway === 'away');
+        
+        const currentScore = {
+          home: homeTeam?.score || '0',
+          away: awayTeam?.score || '0'
+        };
+        
+        const previousScore = previousScoresRef.current.get(game.id);
+        if (previousScore && 
+            (previousScore.home !== currentScore.home || previousScore.away !== currentScore.away)) {
+          const homeAbbr = homeTeam?.team.abbreviation || 'Home';
+          const awayAbbr = awayTeam?.team.abbreviation || 'Away';
+          scoreChanges.push(`${awayAbbr} ${currentScore.away} - ${homeAbbr} ${currentScore.home}`);
+        }
+        
+        previousScoresRef.current.set(game.id, currentScore);
+      });
+      
+      setGames(fetchedGames);
+      setLastRefresh(new Date());
+      
+      if (scoreChanges.length > 0) {
+        toast.success(`Score update: ${scoreChanges.join(' | ')}`);
+      }
+      
+      if (selectedGame) {
+        const updatedSelectedGame = fetchedGames.find(g => g.id === selectedGame.id);
+        if (updatedSelectedGame) {
+          setSelectedGame(updatedSelectedGame);
+          await loadBoxScore(updatedSelectedGame.id);
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing games:', error);
+    }
+  };
 
   const loadGames = async () => {
     setLoading(true);
     try {
       const fetchedGames = await espnGameData.getRecentGames(daysBack);
       setGames(fetchedGames);
+      setLastRefresh(new Date());
+      
+      fetchedGames.forEach(game => {
+        const competition = game.competitions?.[0];
+        const homeTeam = competition?.competitors?.find(c => c.homeAway === 'home');
+        const awayTeam = competition?.competitors?.find(c => c.homeAway === 'away');
+        previousScoresRef.current.set(game.id, {
+          home: homeTeam?.score || '0',
+          away: awayTeam?.score || '0'
+        });
+      });
+      
       toast.success(`Loaded ${fetchedGames.length} games from the last ${daysBack} days`);
       
       if (fetchedGames.length > 0 && !selectedGame) {
-        const completedGame = fetchedGames.find(g => 
-          g.status?.type?.completed === true
-        );
-        if (completedGame) {
-          setSelectedGame(completedGame);
-          loadBoxScore(completedGame.id);
+        const liveGame = fetchedGames.find(g => g.status?.type?.state === 'in');
+        const gameToSelect = liveGame || fetchedGames.find(g => g.status?.type?.completed === true) || fetchedGames[0];
+        
+        if (gameToSelect) {
+          setSelectedGame(gameToSelect);
+          loadBoxScore(gameToSelect.id);
         }
       }
     } catch (error) {
@@ -109,6 +222,11 @@ export function GameScoreboard() {
               </CardTitle>
               <CardDescription className="mt-1.5">
                 Live NCAA baseball games and box scores from ESPN
+                {lastRefresh && (
+                  <span className="ml-2 text-xs">
+                    • Last updated: {lastRefresh.toLocaleTimeString()}
+                  </span>
+                )}
               </CardDescription>
             </div>
             <div className="flex items-center gap-2">
@@ -135,6 +253,52 @@ export function GameScoreboard() {
           </div>
         </CardHeader>
       </Card>
+
+      {hasLiveGames() && (
+        <Card className="border-success/30 bg-success/5">
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <Pulse size={20} weight="bold" className="text-success animate-pulse" />
+                  <span className="font-semibold text-sm">Live Games Auto-Refresh</span>
+                </div>
+                {autoRefresh && (
+                  <Badge variant="outline" className="border-success/30 bg-success/10 text-success font-mono text-xs">
+                    Next: {secondsUntilRefresh}s
+                  </Badge>
+                )}
+              </div>
+              
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="auto-refresh" className="text-sm cursor-pointer">
+                    Auto-refresh
+                  </Label>
+                  <Switch
+                    id="auto-refresh"
+                    checked={autoRefresh}
+                    onCheckedChange={setAutoRefresh}
+                  />
+                </div>
+                
+                <select
+                  value={refreshInterval}
+                  onChange={(e) => setRefreshInterval(parseInt(e.target.value))}
+                  disabled={!autoRefresh}
+                  className="h-9 rounded-md border border-input bg-background px-3 text-sm disabled:opacity-50"
+                >
+                  <option value={15}>Every 15s</option>
+                  <option value={30}>Every 30s</option>
+                  <option value={60}>Every 1m</option>
+                  <option value={120}>Every 2m</option>
+                  <option value={300}>Every 5m</option>
+                </select>
+              </div>
+            </div>
+          </CardHeader>
+        </Card>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-1">
