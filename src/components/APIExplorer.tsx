@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import {
   Accordion,
   AccordionContent,
@@ -7,9 +6,12 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Copy, CheckCircle } from '@phosphor-icons/react';
+import { SectionCard } from '@/components/SectionCard';
+import { CodeBlock } from '@/components/CodeBlock';
+import { StatusPill } from '@/components/StatusPill';
+import { CoveragePill } from '@/components/CoveragePill';
+import { ProvenanceSnippet } from '@/components/ProvenanceSnippet';
+import { DataTable } from '@/components/DataTable';
 import { apiEndpoints } from '@/lib/data';
 import type { APIEndpoint } from '@/lib/types';
 
@@ -21,120 +23,75 @@ const methodColors = {
 };
 
 export function APIExplorer() {
-  const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const categories = Array.from(new Set(apiEndpoints.map((e) => e.category)));
-
-  const copyToClipboard = (text: string, path: string) => {
-    navigator.clipboard.writeText(text);
-    setCopiedPath(path);
-    setTimeout(() => setCopiedPath(null), 2000);
-  };
 
   const renderEndpoint = (endpoint: APIEndpoint) => {
     const curlExample = `curl -H "Authorization: Bearer <API_KEY>" \\
   "https://api.baseball-analytics.dev${endpoint.path}"`;
 
+    const paramsTableData = endpoint.params?.map((p) => ({
+      name: p.name,
+      type: p.type,
+      required: p.required ? 'Yes' : 'No',
+      description: p.description,
+    })) || [];
+
     return (
       <AccordionItem key={endpoint.path} value={endpoint.path}>
-        <AccordionTrigger className="hover:no-underline">
+        <AccordionTrigger className="hover:no-underline py-4">
           <div className="flex items-center gap-3 w-full pr-4">
-            <Badge className={`${methodColors[endpoint.method]} font-mono text-xs px-2 py-0.5 border`}>
+            <Badge className={`${methodColors[endpoint.method]} font-mono text-xs px-2.5 py-1 border font-semibold`}>
               {endpoint.method}
             </Badge>
-            <code className="font-mono text-sm flex-1 text-left">{endpoint.path}</code>
+            <code className="font-mono text-sm flex-1 text-left text-foreground">{endpoint.path}</code>
           </div>
         </AccordionTrigger>
         <AccordionContent>
-          <div className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">{endpoint.description}</p>
+          <div className="space-y-6 pt-2 pb-4 pl-1">
+            <div>
+              <p className="text-sm text-foreground leading-relaxed">{endpoint.description}</p>
+            </div>
 
             {endpoint.params && endpoint.params.length > 0 && (
-              <div>
-                <h4 className="text-sm font-semibold mb-2">Parameters</h4>
-                <div className="space-y-2">
-                  {endpoint.params.map((param) => (
-                    <div key={param.name} className="flex gap-3 text-sm">
-                      <code className="font-mono text-xs bg-muted px-2 py-1 rounded">
-                        {param.name}
-                      </code>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
-                          <span className="text-muted-foreground">{param.type}</span>
-                          {param.required && (
-                            <Badge variant="outline" className="text-xs">
-                              required
-                            </Badge>
-                          )}
-                        </div>
-                        <p className="text-muted-foreground text-xs mt-0.5">
-                          {param.description}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+              <div className="space-y-3">
+                <h4 className="text-sm font-semibold">Query Parameters</h4>
+                <DataTable
+                  columns={[
+                    { key: 'name', label: 'Parameter', mono: true },
+                    { key: 'type', label: 'Type', mono: true },
+                    { key: 'required', label: 'Required', align: 'center' },
+                    { key: 'description', label: 'Description' },
+                  ]}
+                  data={paramsTableData}
+                  maxHeight="300px"
+                  stickyHeader={false}
+                />
               </div>
             )}
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold">Example Response</h4>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() =>
-                    copyToClipboard(JSON.stringify(endpoint.response, null, 2), endpoint.path)
-                  }
-                >
-                  {copiedPath === endpoint.path ? (
-                    <>
-                      <CheckCircle className="mr-1" size={14} />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-1" size={14} />
-                      Copy
-                    </>
-                  )}
-                </Button>
-              </div>
-              <ScrollArea className="h-64 w-full rounded-md border">
-                <pre className="p-4 text-xs font-mono">
-                  {JSON.stringify(endpoint.response, null, 2)}
-                </pre>
-              </ScrollArea>
+            <div className="flex flex-wrap gap-2">
+              <StatusPill status="official" />
+              <CoveragePill coverage="pbp" />
             </div>
 
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h4 className="text-sm font-semibold">cURL Example</h4>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="h-7 text-xs"
-                  onClick={() =>
-                    copyToClipboard(curlExample, `curl-${endpoint.path}`)
-                  }
-                >
-                  {copiedPath === `curl-${endpoint.path}` ? (
-                    <>
-                      <CheckCircle className="mr-1" size={14} />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="mr-1" size={14} />
-                      Copy
-                    </>
-                  )}
-                </Button>
-              </div>
-              <pre className="p-4 text-xs font-mono bg-muted rounded-md overflow-x-auto">
-                {curlExample}
-              </pre>
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">Example Request</h4>
+              <CodeBlock code={curlExample} language="bash" title="cURL" />
             </div>
+
+            <div className="space-y-3">
+              <h4 className="text-sm font-semibold">Example Response</h4>
+              <CodeBlock 
+                code={JSON.stringify(endpoint.response, null, 2)} 
+                language="json" 
+                title="200 OK" 
+              />
+            </div>
+
+            <ProvenanceSnippet
+              sources={['host_xml', 'licensed_feed_a']}
+              lastUpdated="2026-03-04T18:22:10Z"
+            />
           </div>
         </AccordionContent>
       </AccordionItem>
@@ -142,33 +99,31 @@ export function APIExplorer() {
   };
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-semibold mb-2">API Explorer</h2>
-        <p className="text-muted-foreground">
+    <div className="space-y-8">
+      <div className="space-y-3">
+        <h2 className="text-3xl font-semibold tracking-tight">API Explorer</h2>
+        <p className="text-muted-foreground text-base max-w-4xl leading-relaxed">
           Browse the complete API surface with authentication patterns, request parameters, and
           response structures demonstrating NCAA policy compliance and provenance tracking.
         </p>
       </div>
 
-      {categories.map((category) => {
-        const categoryEndpoints = apiEndpoints.filter((e) => e.category === category);
-        return (
-          <Card key={category}>
-            <CardHeader>
-              <CardTitle>{category} Endpoints</CardTitle>
-              <CardDescription>
-                {categoryEndpoints.length} endpoint{categoryEndpoints.length !== 1 ? 's' : ''}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
+      <div className="space-y-6">
+        {categories.map((category) => {
+          const categoryEndpoints = apiEndpoints.filter((e) => e.category === category);
+          return (
+            <SectionCard
+              key={category}
+              title={`${category} Endpoints`}
+              description={`${categoryEndpoints.length} endpoint${categoryEndpoints.length !== 1 ? 's' : ''} for ${category.toLowerCase()} operations`}
+            >
               <Accordion type="single" collapsible className="w-full">
                 {categoryEndpoints.map(renderEndpoint)}
               </Accordion>
-            </CardContent>
-          </Card>
-        );
-      })}
+            </SectionCard>
+          );
+        })}
+      </div>
     </div>
   );
 }
