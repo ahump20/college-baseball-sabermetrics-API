@@ -12,10 +12,13 @@ import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
 import { GameScoreboard } from '@/components/GameScoreboard';
+import { PageLoading } from '@/components/Loading';
+import { usePageLoading } from '@/hooks/use-loading';
 import blazeLogo from '@/assets/images/Screenshot_2026-02-25_at_5.12.06_PM.png';
 
 function App() {
   const [activeTab, setActiveTab] = useState('games');
+  const [isInitialLoading] = usePageLoading(true, 1200);
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
