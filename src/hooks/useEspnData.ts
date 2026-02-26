@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { type Player, realPlayers } from '@/lib/playerData';
-import { fetchTeams, type ESPNTeam } from '@/lib/espnApi';
+import { espnAPI, type ESPNTeam } from '@/lib/espnAPI';
 
 interface UseEspnDataResult {
   players: Player[];
@@ -26,9 +26,9 @@ export function useEspnData(): UseEspnDataResult {
 
     async function loadData() {
       try {
-        const espnTeams = await fetchTeams();
-        if (!cancelled && espnTeams.length > 0) {
-          setTeams(espnTeams);
+        const response = await espnAPI.getTeams();
+        if (!cancelled && response.teams?.length > 0) {
+          setTeams(response.teams);
           setDataSource('espn');
         }
       } catch (err) {
