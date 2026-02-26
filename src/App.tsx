@@ -17,11 +17,12 @@ import { TeamDetailView } from '@/components/TeamDetailView';
 import { LiveGameScores } from '@/components/LiveGameScores';
 import { TeamPerformanceCharts } from '@/components/TeamPerformanceCharts';
 import { HighlightlyDataDashboard } from '@/components/HighlightlyDataDashboard';
+import { NCAABaseballPortal } from '@/components/NCAABaseballPortal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 import blazeLogo from '@/assets/images/bsi-logo-primary.webp';
 
-type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config' | 'teams' | 'live-scores' | 'trends' | 'highlightly';
+type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config' | 'teams' | 'live-scores' | 'trends' | 'highlightly' | 'portal';
 
 interface NavItem {
   id: ViewType;
@@ -53,6 +54,7 @@ function App() {
     {
       title: 'Overview',
       items: [
+        { id: 'portal', label: 'NCAA Portal', icon: Baseball },
         { id: 'dashboard', label: 'Dashboard', icon: ChartLine },
         { id: 'live-scores', label: 'Live Scores', icon: Lightning },
         { id: 'highlightly', label: 'Highlightly Data', icon: Sparkle },
