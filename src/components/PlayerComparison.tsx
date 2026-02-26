@@ -28,9 +28,11 @@ import {
   Target,
   Lightning,
 } from '@phosphor-icons/react';
-import { mockPlayers, type Player } from '@/lib/playerData';
+import { type Player } from '@/lib/playerData';
+import { useEspnData } from '@/hooks/useEspnData';
 
 export function PlayerComparison() {
+  const { players, dataSource, isLoading } = useEspnData();
   const [selectedDivision, setSelectedDivision] = useState<string>('all');
   const [selectedConference, setSelectedConference] = useState<string>('all');
   const [selectedPosition, setSelectedPosition] = useState<string>('all');
@@ -42,7 +44,7 @@ export function PlayerComparison() {
   const divisions = ['all', 'D1', 'D2', 'D3'];
   const conferences = [
     'all',
-    ...Array.from(new Set(mockPlayers.map((p) => p.conference))),
+    ...Array.from(new Set(players.map((p) => p.conference))),
   ];
   const battingPositions = ['all', 'C', '1B', '2B', '3B', 'SS', 'OF'];
   const pitchingPositions = ['all', 'SP', 'RP', 'CL'];
@@ -71,7 +73,7 @@ export function PlayerComparison() {
   ];
 
   const filterPlayers = (): Player[] => {
-    return mockPlayers.filter((player) => {
+    return players.filter((player) => {
       if (selectedDivision !== 'all' && player.division !== selectedDivision) return false;
       if (selectedConference !== 'all' && player.conference !== selectedConference) return false;
       if (selectedPosition !== 'all' && player.position !== selectedPosition) return false;
@@ -302,7 +304,7 @@ export function PlayerComparison() {
   };
 
   const renderComparison = () => {
-    const selectedPlayerObjs = mockPlayers.filter((p) => selectedPlayers.includes(p.id));
+    const selectedPlayerObjs = players.filter((p) => selectedPlayers.includes(p.id));
     const metrics = playerType === 'batting' ? battingMetrics : pitchingMetrics;
 
     if (selectedPlayerObjs.length === 0) {
@@ -494,7 +496,12 @@ export function PlayerComparison() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-semibold mb-2">Player Performance Comparison</h2>
+        <div className="flex items-center gap-3 mb-2">
+          <h2 className="text-2xl font-semibold">Player Performance Comparison</h2>
+          <Badge variant="outline" className="font-mono text-[0.7rem] px-2 py-0.5">
+            {isLoading ? 'Loading...' : dataSource === 'espn' ? '📡 ESPN Live' : '📊 2024 NCAA Data'}
+          </Badge>
+        </div>
         <p className="text-muted-foreground">
           Compare top performers across divisions with advanced sabermetrics, context-adjusted
           metrics, and tracking data. View leaderboards or select players for head-to-head analysis.

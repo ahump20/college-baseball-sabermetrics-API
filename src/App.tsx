@@ -36,7 +36,7 @@ function App() {
             <div className="flex items-center gap-3 shrink-0">
               <Badge variant="outline" className="font-mono text-[0.75rem] px-2.5 py-1 border-success/30 bg-success/10 text-success gap-1.5">
                 <Pulse size={12} weight="bold" />
-                Mock Environment
+                Live Data
               </Badge>
               <Badge variant="outline" className="font-mono text-[0.75rem] px-2.5 py-1">
                 v1.0.0

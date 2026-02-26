@@ -78,11 +78,11 @@ export const apiEndpoints: APIEndpoint[] = [
     response: {
       data: [
         {
-          team_id: 't_123',
-          name: 'Texas Longhorns',
+          team_id: 't_061',
+          name: 'Georgia Bulldogs',
           division: 'D1',
           conference_id: 'sec',
-          ncaa_org_code: 'TEX',
+          ncaa_org_code: 'UGA',
         },
       ],
     },
@@ -110,14 +110,14 @@ export const apiEndpoints: APIEndpoint[] = [
       },
       teams: {
         home: {
-          team_id: 't_123',
+          team_id: 't_061',
           runs: 6,
           hits: 9,
           errors: 1,
           lob: 7,
         },
         away: {
-          team_id: 't_456',
+          team_id: 't_057',
           runs: 4,
           hits: 8,
           errors: 0,
@@ -193,11 +193,11 @@ export const apiEndpoints: APIEndpoint[] = [
       model_version: 'woba_weights_2026_d1_v1',
       data: [
         {
-          player_id: 'p_77',
-          name: 'John Smith',
-          team_id: 't_123',
-          pa: 185,
-          wRC_plus: 148,
+          player_id: 'p_001',
+          name: 'Charlie Condon',
+          team_id: 't_061',
+          pa: 291,
+          wRC_plus: 248,
           rank: 1,
         },
       ],
