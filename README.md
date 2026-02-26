@@ -12,22 +12,29 @@ A production-ready **NCAA Analytics Platform** with real-time game data, advance
 - ✅ **Player & team comparison tools**
 - ✅ **MCP Server** ready to deploy to Cloudflare Workers
 
-## 🚀 Quick Start - Deploy Your MCP Server
+## 🚀 READY TO DEPLOY?
 
-**Want to connect this API to Claude.ai?** → **[START_HERE_MCP_DEPLOYMENT.md](./START_HERE_MCP_DEPLOYMENT.md)**
+### ⚡ Quick Start (10 minutes)
+**[`QUICK_START.md`](QUICK_START.md)** - Run these commands to go live immediately
 
-Three simple steps:
-1. Test locally: `wrangler dev`
-2. Deploy to Cloudflare: `wrangler deploy`
-3. Connect to Claude.ai (paste your URL)
+### 📑 All Deployment Documentation
+**[`DEPLOYMENT_DOCUMENTATION_INDEX.md`](DEPLOYMENT_DOCUMENTATION_INDEX.md)** - Complete index of all guides
 
-**Cost:** $0/month (Cloudflare Workers free tier: 100K requests/day)
+### 📋 Complete Deployment Guide
+**[`PRODUCTION_DEPLOYMENT_STEPS.md`](PRODUCTION_DEPLOYMENT_STEPS.md)** - Full walkthrough with credentials and commands
 
-## 📚 Documentation
+### 🤖 Connect to Claude.ai
+**[`CLAUDE_MCP_SETUP.md`](CLAUDE_MCP_SETUP.md)** - Step-by-step Claude.ai integration
 
-### MCP Server Deployment
-- **[START_HERE_MCP_DEPLOYMENT.md](./START_HERE_MCP_DEPLOYMENT.md)** - **Start here** for MCP deployment
-- **[DEPLOY_MCP_TO_CLOUDFLARE.md](./DEPLOY_MCP_TO_CLOUDFLARE.md)** - Complete step-by-step guide
+### ✅ Deployment Summary
+**[`DEPLOYMENT_READY.md`](DEPLOYMENT_READY.md)** - Executive overview and architecture
+
+---
+
+## 📚 Additional Documentation
+
+### MCP Server
+- **[BLAZE_DEPLOYMENT_GUIDE.md](./BLAZE_DEPLOYMENT_GUIDE.md)** - Original deployment guide
 - **[MCP_QUICK_REFERENCE.md](./MCP_QUICK_REFERENCE.md)** - Command cheatsheet
 - **[MCP_ARCHITECTURE_DIAGRAM.md](./MCP_ARCHITECTURE_DIAGRAM.md)** - System architecture
 
