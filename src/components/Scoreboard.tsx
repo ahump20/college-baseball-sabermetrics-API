@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -311,6 +311,7 @@ export function Scoreboard() {
   const [selectedGame, setSelectedGame] = useState<ESPNGame | null>(null);
   const [boxScore, setBoxScore] = useState<BoxScore | null>(null);
   const [boxScoreLoading, setBoxScoreLoading] = useState(false);
+  const activeGameIdRef = useRef<string | null>(null);
 
   const fetchGames = useCallback(async (date: string) => {
     setLoading(true);
@@ -330,11 +331,13 @@ export function Scoreboard() {
   }, []);
 
   const handleSelectGame = useCallback(async (game: ESPNGame) => {
+    activeGameIdRef.current = game.id;
     setSelectedGame(game);
     setBoxScore(null);
     setBoxScoreLoading(true);
     try {
       const data = await espnAPI.getGameBoxScore(game.id);
+      if (activeGameIdRef.current !== game.id) return;
       if (data) {
         // Normalize ESPN box score structure into our BoxScore interface
         const normalized: BoxScore = {
@@ -376,9 +379,9 @@ export function Scoreboard() {
       }
     } catch {
       // Box score unavailable; we still show the linescore from the game object
-      setBoxScore(null);
+      if (activeGameIdRef.current === game.id) setBoxScore(null);
     } finally {
-      setBoxScoreLoading(false);
+      if (activeGameIdRef.current === game.id) setBoxScoreLoading(false);
     }
   }, []);
 
