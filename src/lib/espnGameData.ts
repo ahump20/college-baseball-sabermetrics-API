@@ -26,6 +26,19 @@ export interface BoxScorePlayer {
       BB: number;
       SO: number;
       AVG: string;
+      '2B'?: number;
+      '3B'?: number;
+      HR?: number;
+      SB?: number;
+      CS?: number;
+      LOB?: number;
+      HBP?: number;
+      SF?: number;
+      SAC?: number;
+      GDP?: number;
+      OBP?: string;
+      SLG?: string;
+      OPS?: string;
     };
     pitching?: {
       IP: string;
@@ -36,6 +49,14 @@ export interface BoxScorePlayer {
       SO: number;
       ERA: string;
       pitches?: number;
+      strikes?: number;
+      HR?: number;
+      HBP?: number;
+      WP?: number;
+      BK?: number;
+      WHIP?: string;
+      K9?: string;
+      BB9?: string;
     };
   };
 }

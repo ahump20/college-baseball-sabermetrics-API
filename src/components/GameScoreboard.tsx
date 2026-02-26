@@ -14,8 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { ArrowClockwise, Baseball, Calendar, MapPin, Users, Pulse } from '@phosphor-icons/react';
-import { espnGameData, type GameBoxScore } from '@/lib/espnGameData';
+import { ArrowClockwise, Baseball, Calendar, MapPin, Users, Pulse, ChatText } from '@phosphor-icons/react';
+import { espnGameData, type GameBoxScore, type PlayByPlayEvent } from '@/lib/espnGameData';
 import type { ESPNGame } from '@/lib/espnAPI';
 import { toast } from 'sonner';
 
@@ -23,8 +23,10 @@ export function GameScoreboard() {
   const [games, setGames] = useState<ESPNGame[]>([]);
   const [selectedGame, setSelectedGame] = useState<ESPNGame | null>(null);
   const [boxScore, setBoxScore] = useState<GameBoxScore | null>(null);
+  const [playByPlay, setPlayByPlay] = useState<PlayByPlayEvent[]>([]);
   const [loading, setLoading] = useState(false);
   const [boxScoreLoading, setBoxScoreLoading] = useState(false);
+  const [pbpLoading, setPbpLoading] = useState(false);
   const [daysBack, setDaysBack] = useState(3);
   const [autoRefresh, setAutoRefresh] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
@@ -182,9 +184,26 @@ export function GameScoreboard() {
     }
   };
 
+  const loadPlayByPlay = async (gameId: string) => {
+    setPbpLoading(true);
+    try {
+      const plays = await espnGameData.getPlayByPlay(gameId);
+      setPlayByPlay(plays);
+      if (plays.length === 0) {
+        toast.info('No play-by-play data available for this game');
+      }
+    } catch (error) {
+      console.error('Error loading play-by-play:', error);
+      toast.error('Failed to load play-by-play data');
+    } finally {
+      setPbpLoading(false);
+    }
+  };
+
   const handleGameClick = (game: ESPNGame) => {
     setSelectedGame(game);
     loadBoxScore(game.id);
+    loadPlayByPlay(game.id);
   };
 
   const formatDate = (dateStr: string) => {
@@ -486,24 +505,35 @@ export function GameScoreboard() {
                     <TabsList>
                       <TabsTrigger value="batting">Batting</TabsTrigger>
                       <TabsTrigger value="pitching">Pitching</TabsTrigger>
+                      <TabsTrigger value="playbyplay">
+                        <ChatText size={16} weight="bold" className="mr-1.5" />
+                        Play-by-Play
+                      </TabsTrigger>
                     </TabsList>
                     
                     <TabsContent value="batting" className="space-y-4">
                       {boxScore.awayRoster && (
                         <div>
                           <h5 className="font-semibold mb-2">{boxScore.away.displayName}</h5>
-                          <div className="border rounded-lg overflow-hidden">
+                          <div className="border rounded-lg overflow-auto">
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Player</TableHead>
+                                  <TableHead className="sticky left-0 bg-background z-10">Player</TableHead>
                                   <TableHead className="text-center">AB</TableHead>
                                   <TableHead className="text-center">R</TableHead>
                                   <TableHead className="text-center">H</TableHead>
+                                  <TableHead className="text-center">2B</TableHead>
+                                  <TableHead className="text-center">3B</TableHead>
+                                  <TableHead className="text-center">HR</TableHead>
                                   <TableHead className="text-center">RBI</TableHead>
                                   <TableHead className="text-center">BB</TableHead>
                                   <TableHead className="text-center">SO</TableHead>
+                                  <TableHead className="text-center">SB</TableHead>
+                                  <TableHead className="text-center">LOB</TableHead>
                                   <TableHead className="text-right">AVG</TableHead>
+                                  <TableHead className="text-right">OBP</TableHead>
+                                  <TableHead className="text-right">SLG</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -511,7 +541,7 @@ export function GameScoreboard() {
                                   .filter(p => p.stats.batting)
                                   .map((player) => (
                                     <TableRow key={player.id}>
-                                      <TableCell className="font-medium">
+                                      <TableCell className="font-medium sticky left-0 bg-background">
                                         {player.displayName}
                                         {player.position && (
                                           <span className="ml-2 text-xs text-muted-foreground">
@@ -519,27 +549,20 @@ export function GameScoreboard() {
                                           </span>
                                         )}
                                       </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.AB}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.R}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.H}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.RBI}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.BB}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.SO}
-                                      </TableCell>
-                                      <TableCell className="text-right font-mono">
-                                        {player.stats.batting?.AVG}
-                                      </TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.AB || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.R || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.H || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.['2B'] || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.['3B'] || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.HR || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.RBI || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.BB || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.SO || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.SB || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.LOB || 0}</TableCell>
+                                      <TableCell className="text-right font-mono">{player.stats.batting?.AVG || '.000'}</TableCell>
+                                      <TableCell className="text-right font-mono">{player.stats.batting?.OBP || '.000'}</TableCell>
+                                      <TableCell className="text-right font-mono">{player.stats.batting?.SLG || '.000'}</TableCell>
                                     </TableRow>
                                   ))}
                               </TableBody>
@@ -551,18 +574,25 @@ export function GameScoreboard() {
                       {boxScore.homeRoster && (
                         <div>
                           <h5 className="font-semibold mb-2">{boxScore.home.displayName}</h5>
-                          <div className="border rounded-lg overflow-hidden">
+                          <div className="border rounded-lg overflow-auto">
                             <Table>
                               <TableHeader>
                                 <TableRow>
-                                  <TableHead>Player</TableHead>
+                                  <TableHead className="sticky left-0 bg-background z-10">Player</TableHead>
                                   <TableHead className="text-center">AB</TableHead>
                                   <TableHead className="text-center">R</TableHead>
                                   <TableHead className="text-center">H</TableHead>
+                                  <TableHead className="text-center">2B</TableHead>
+                                  <TableHead className="text-center">3B</TableHead>
+                                  <TableHead className="text-center">HR</TableHead>
                                   <TableHead className="text-center">RBI</TableHead>
                                   <TableHead className="text-center">BB</TableHead>
                                   <TableHead className="text-center">SO</TableHead>
+                                  <TableHead className="text-center">SB</TableHead>
+                                  <TableHead className="text-center">LOB</TableHead>
                                   <TableHead className="text-right">AVG</TableHead>
+                                  <TableHead className="text-right">OBP</TableHead>
+                                  <TableHead className="text-right">SLG</TableHead>
                                 </TableRow>
                               </TableHeader>
                               <TableBody>
@@ -570,7 +600,7 @@ export function GameScoreboard() {
                                   .filter(p => p.stats.batting)
                                   .map((player) => (
                                     <TableRow key={player.id}>
-                                      <TableCell className="font-medium">
+                                      <TableCell className="font-medium sticky left-0 bg-background">
                                         {player.displayName}
                                         {player.position && (
                                           <span className="ml-2 text-xs text-muted-foreground">
@@ -578,27 +608,20 @@ export function GameScoreboard() {
                                           </span>
                                         )}
                                       </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.AB}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.R}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.H}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.RBI}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.BB}
-                                      </TableCell>
-                                      <TableCell className="text-center font-mono">
-                                        {player.stats.batting?.SO}
-                                      </TableCell>
-                                      <TableCell className="text-right font-mono">
-                                        {player.stats.batting?.AVG}
-                                      </TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.AB || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.R || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.H || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.['2B'] || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.['3B'] || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.HR || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.RBI || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.BB || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.SO || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.SB || 0}</TableCell>
+                                      <TableCell className="text-center font-mono">{player.stats.batting?.LOB || 0}</TableCell>
+                                      <TableCell className="text-right font-mono">{player.stats.batting?.AVG || '.000'}</TableCell>
+                                      <TableCell className="text-right font-mono">{player.stats.batting?.OBP || '.000'}</TableCell>
+                                      <TableCell className="text-right font-mono">{player.stats.batting?.SLG || '.000'}</TableCell>
                                     </TableRow>
                                   ))}
                               </TableBody>
@@ -715,6 +738,60 @@ export function GameScoreboard() {
                             </Table>
                           </div>
                         </div>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="playbyplay" className="space-y-4">
+                      {pbpLoading ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          Loading play-by-play...
+                        </div>
+                      ) : playByPlay.length === 0 ? (
+                        <div className="text-center py-12 text-muted-foreground">
+                          No play-by-play data available for this game
+                        </div>
+                      ) : (
+                        <ScrollArea className="h-[600px]">
+                          <div className="space-y-3 pr-4">
+                            {playByPlay.map((play, index) => (
+                              <div
+                                key={play.id || index}
+                                className={`p-3 rounded-lg border ${
+                                  play.scoringPlay
+                                    ? 'border-primary/50 bg-primary/5'
+                                    : 'border-border bg-card'
+                                }`}
+                              >
+                                <div className="flex items-start justify-between gap-3 mb-2">
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="outline" className="font-mono text-xs">
+                                      {play.half === 'top' ? '▲' : '▼'} {play.inning}
+                                    </Badge>
+                                    <span className="text-xs text-muted-foreground">
+                                      {play.outs} out{play.outs !== 1 ? 's' : ''}
+                                    </span>
+                                    {play.balls !== undefined && play.strikes !== undefined && (
+                                      <span className="text-xs text-muted-foreground font-mono">
+                                        {play.balls}-{play.strikes}
+                                      </span>
+                                    )}
+                                  </div>
+                                  {play.scoringPlay && (
+                                    <Badge className="bg-primary text-primary-foreground">
+                                      Score
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm leading-relaxed">{play.text}</p>
+                                {play.timestamp && (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    {new Date(play.timestamp).toLocaleTimeString()}
+                                  </p>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </ScrollArea>
                       )}
                     </TabsContent>
                   </Tabs>
