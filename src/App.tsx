@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
-import { Database, ChartBar, Users, Trophy, Pulse, Code, Calculator, ChartLine, Baseball, Gear, List, X } from '@phosphor-icons/react';
+import { Database, ChartBar, Users, Trophy, Pulse, Code, Calculator, ChartLine, Baseball, Gear, List, X, TrendUp, CalendarDots, ChartLineUp } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -13,18 +13,24 @@ import { Scoreboard } from '@/components/Scoreboard';
 import { KVNamespaceManager } from '@/components/KVNamespaceManager';
 import { APISecretsManager } from '@/components/APISecretsManager';
 import { RealTimeDashboard } from '@/components/RealTimeDashboard';
+import { TeamDetailView } from '@/components/TeamDetailView';
+import { LiveGameScores } from '@/components/LiveGameScores';
+import { TeamPerformanceCharts } from '@/components/TeamPerformanceCharts';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config';
+type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config' | 'teams' | 'live-scores' | 'trends';
 
 function App() {
   const [currentView, setCurrentView] = useState<ViewType>('dashboard');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [selectedTeamId, setSelectedTeamId] = useState<string | null>(null);
   const isMobile = useIsMobile();
 
   const navItems = [
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: ChartLine },
+    { id: 'live-scores' as ViewType, label: 'Live Scores', icon: CalendarDots },
+    { id: 'trends' as ViewType, label: 'Trends', icon: ChartLineUp },
     { id: 'api' as ViewType, label: 'API', icon: Code },
     { id: 'analytics' as ViewType, label: 'Analytics', icon: Calculator },
     { id: 'players' as ViewType, label: 'Players', icon: Users },
@@ -89,8 +95,11 @@ function App() {
     </>
   );
 
-  const viewTitles = {
+  const viewTitles: Record<ViewType, string> = {
     dashboard: 'Dashboard',
+    'live-scores': 'Live Scores & Schedules',
+    trends: 'Performance Trends',
+    teams: 'Team Details',
     api: 'API Explorer',
     analytics: 'Analytics & Metrics',
     players: 'Player Performance',
@@ -100,8 +109,11 @@ function App() {
     config: 'Configuration & Settings',
   };
 
-  const viewDescriptions = {
+  const viewDescriptions: Record<ViewType, string> = {
     dashboard: 'Real-time NCAA baseball analytics and platform metrics',
+    'live-scores': 'Live game scores and schedules from ESPN',
+    trends: 'Data visualization charts for team performance analysis',
+    teams: 'Detailed team information with roster and statistics',
     api: 'Interactive endpoint documentation with live examples',
     analytics: 'Advanced sabermetrics with context adjustments',
     players: 'Compare and analyze player statistics',
@@ -167,6 +179,11 @@ function App() {
               className="h-full"
             >
               {currentView === 'dashboard' && <RealTimeDashboard />}
+              {currentView === 'live-scores' && <LiveGameScores />}
+              {currentView === 'trends' && <TeamPerformanceCharts />}
+              {currentView === 'teams' && selectedTeamId && (
+                <TeamDetailView teamId={selectedTeamId} onBack={() => setSelectedTeamId(null)} />
+              )}
               {currentView === 'api' && <APIExplorer />}
               {currentView === 'schema' && (
                 <div className="space-y-6">
