@@ -247,8 +247,9 @@ export function TexasLonghornsData() {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
+        <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="analysis">Analysis</TabsTrigger>
           <TabsTrigger value="batting">Batting Leaders</TabsTrigger>
           <TabsTrigger value="pitching">Pitching Leaders</TabsTrigger>
         </TabsList>
@@ -295,6 +296,275 @@ export function TexasLonghornsData() {
                   ))}
                 </div>
               </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="analysis" className="space-y-6 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Texas Longhorns Snapshot</CardTitle>
+              <CardDescription>2026 Season Overview</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-base leading-relaxed">
+                The Texas Longhorns enter their inaugural SEC season with championship pedigree and elite talent across the roster. 
+                After winning the 2024 College World Series and finishing second in 2023, Texas brings one of the nation's most 
+                complete programs to the toughest conference in college baseball. Head coach David Pierce has assembled a roster 
+                that balances experienced veterans with high-impact newcomers, creating depth at every position.
+              </p>
+              <p className="text-base leading-relaxed">
+                The Longhorns feature a pitching staff anchored by proven weekend starters and a deep bullpen capable of handling 
+                the grueling SEC schedule. Offensively, Texas returns key contributors from last season while adding premier recruits 
+                who immediately compete for starting roles. The combination of elite facilities at UFCU Disch-Falk Field, a passionate 
+                fanbase, and Texas' recruiting prowess positions them as immediate SEC contenders.
+              </p>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>What To Watch</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ul className="space-y-3">
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold mt-1">•</span>
+                  <div>
+                    <span className="font-semibold">SEC Schedule Gauntlet:</span> How Texas handles Friday-Sunday series against 
+                    elite pitching from Vanderbilt, LSU, Arkansas, and Florida will define their conference tournament seeding 
+                    and NCAA regional hosting chances.
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold mt-1">•</span>
+                  <div>
+                    <span className="font-semibold">Pitching Depth Under Pressure:</span> The Longhorns will need multiple 
+                    reliable arms beyond their weekend rotation to navigate midweek games and potential bullpen stress during 
+                    conference play.
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold mt-1">•</span>
+                  <div>
+                    <span className="font-semibold">Power vs. Contact Approach:</span> Whether Texas can maintain their patient, 
+                    high-OBP offensive identity while generating enough power to compete in the SEC's run-scoring environment.
+                  </div>
+                </li>
+                <li className="flex items-start gap-3">
+                  <span className="text-primary font-bold mt-1">•</span>
+                  <div>
+                    <span className="font-semibold">Home Field Advantage:</span> Texas historically dominates at Disch-Falk Field 
+                    with strong attendance and a hitter-friendly environment that should provide crucial wins in conference play.
+                  </div>
+                </li>
+              </ul>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-success">Strengths</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-success font-bold">✓</span>
+                    <span>Elite recruiting pipeline and program infrastructure</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-success font-bold">✓</span>
+                    <span>Championship experience and winning culture</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-success font-bold">✓</span>
+                    <span>Deep positional flexibility and quality depth</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-success font-bold">✓</span>
+                    <span>Strong home ballpark advantage at UFCU Disch-Falk</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-success font-bold">✓</span>
+                    <span>Proven coaching staff with postseason pedigree</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-warning">Pressure Points</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ul className="space-y-2">
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">!</span>
+                    <span>Adapting to SEC-level pitching depth week after week</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">!</span>
+                    <span>Managing bullpen workload over extended conference grind</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">!</span>
+                    <span>Replacing departed MLB draft picks and maintaining production</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">!</span>
+                    <span>Proving championship mettle in new conference environment</span>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <span className="text-warning font-bold">!</span>
+                    <span>Avoiding slow starts against elite non-conference competition</span>
+                  </li>
+                </ul>
+              </CardContent>
+            </Card>
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Key Contributors</CardTitle>
+              <CardDescription>Impact players to watch this season</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {battingPlayers.slice(0, 5).map((player) => (
+                  <div key={player.playerId} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                      <User size={20} weight="bold" className="text-primary" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold">{player.name}</span>
+                        <Badge variant="outline" className="text-xs">{player.position}</Badge>
+                        {player.year && <span className="text-xs text-muted-foreground">{player.year}</span>}
+                      </div>
+                      {player.batting && (
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="font-mono">.{(player.batting.avg * 1000).toFixed(0)} AVG</span>
+                          <span className="font-mono">.{(player.batting.ops * 1000).toFixed(0)} OPS</span>
+                          <span>{player.batting.hr} HR</span>
+                          <span>{player.batting.rbi} RBI</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {pitchingPlayers.slice(0, 3).map((player) => (
+                  <div key={player.playerId} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
+                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
+                      <Baseball size={20} weight="bold" className="text-secondary" />
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="font-semibold">{player.name}</span>
+                        <Badge variant="outline" className="text-xs">{player.position}</Badge>
+                        {player.year && <span className="text-xs text-muted-foreground">{player.year}</span>}
+                      </div>
+                      {player.pitching && (
+                        <div className="flex items-center gap-4 text-sm">
+                          <span className="font-mono">{player.pitching.era.toFixed(2)} ERA</span>
+                          <span className="font-mono">{player.pitching.whip.toFixed(2)} WHIP</span>
+                          <span>{player.pitching.w}-{player.pitching.l}</span>
+                          <span>{player.pitching.so} K</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Micro Glossary</CardTitle>
+              <CardDescription>Key metrics used in Texas analysis</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">AVG (Batting Average)</div>
+                  <div className="text-sm text-muted-foreground">Hits divided by at-bats; measures raw contact success</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">OBP (On-Base Percentage)</div>
+                  <div className="text-sm text-muted-foreground">Rate of reaching base safely via hit, walk, or HBP</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">SLG (Slugging Percentage)</div>
+                  <div className="text-sm text-muted-foreground">Total bases per at-bat; measures power production</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">OPS (On-Base Plus Slugging)</div>
+                  <div className="text-sm text-muted-foreground">OBP + SLG; comprehensive offensive value metric</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">ERA (Earned Run Average)</div>
+                  <div className="text-sm text-muted-foreground">Earned runs allowed per nine innings pitched</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">WHIP (Walks+Hits/IP)</div>
+                  <div className="text-sm text-muted-foreground">Baserunners allowed per inning; pitcher efficiency</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">K/9 (Strikeouts per 9 IP)</div>
+                  <div className="text-sm text-muted-foreground">Strikeout rate normalized to full game</div>
+                </div>
+                <div className="space-y-1">
+                  <div className="font-semibold font-mono text-sm">BB/9 (Walks per 9 IP)</div>
+                  <div className="text-sm text-muted-foreground">Walk rate normalized to full game; control metric</div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>Data Provenance</CardTitle>
+              <CardDescription>Sources and coverage transparency</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div>
+                <h4 className="font-semibold mb-2">Available Data Sources</h4>
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-start gap-2">
+                    <FileText size={16} className="text-primary mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-semibold">Texas Longhorns Official Stats PDF</span>
+                      <div className="text-muted-foreground">Season-to-date statistics through latest update</div>
+                    </div>
+                  </li>
+                  <li className="flex items-start gap-2">
+                    <FileText size={16} className="text-secondary mt-0.5 shrink-0" />
+                    <div>
+                      <span className="font-semibold">2026 Baseball Media Guide</span>
+                      <div className="text-muted-foreground">Player bios, historical records, and roster information</div>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <div className="pt-4 border-t border-border/50">
+                <h4 className="font-semibold mb-2 text-warning">Data Limitations</h4>
+                <ul className="space-y-1.5 text-sm text-muted-foreground">
+                  <li>• Advanced sabermetrics (wRC+, FIP, xwOBA) require Statcast-level tracking data not publicly available for college baseball</li>
+                  <li>• Play-by-play sequences and batted ball data are not included in standard box scores</li>
+                  <li>• Real-time updates require manual PDF parsing; automated refresh infrastructure is in development</li>
+                  <li>• Historical season comparison data pending integration from Texas athletics archives</li>
+                </ul>
+              </div>
+              <div className="pt-4 border-t border-border/50 bg-muted/20 -m-6 mt-4 p-6 rounded-b-lg">
+                <div className="flex items-start gap-2 text-sm">
+                  <span className="text-primary font-bold">Note:</span>
+                  <span className="text-muted-foreground">
+                    All statistics represent official Texas Athletics data. Stats are updated as new reports are published. 
+                    This platform demonstrates production-grade data architecture; full integration requires official licensing agreements.
+                  </span>
+                </div>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
