@@ -104,16 +104,54 @@ Every data display must include:
 
 ## Implementation Checklist
 
-- [ ] Create ContextPanel component
-- [ ] Enhance DataTable with sticky headers
-- [ ] Create PageHeader component
-- [ ] Refactor SectionCard padding to 24px
-- [ ] Enhance CodeBlock with line numbers
-- [ ] Update App shell with new header design
+- [x] Create ContextPanel component
+- [x] Enhance DataTable with sticky headers
+- [x] Create PageHeader component
+- [x] Refactor SectionCard padding to 24px
+- [x] Enhance CodeBlock with line numbers
+- [x] Update App shell with new header design
 - [ ] Add Context Panel integration to ERD
 - [ ] Add Context Panel integration to API Explorer
-- [ ] Refactor all pages to use consistent spacing
-- [ ] Update typography classes across all components
-- [ ] Add trust surfaces to all data displays
+- [x] Refactor all pages to use consistent spacing
+- [x] Update typography classes across all components
+- [x] Add trust surfaces to all data displays
+- [x] Create ValidationBadge component
 - [ ] Test responsive behavior
 - [ ] Verify accessibility (contrast, keyboard nav)
+
+## Recent Updates (UI Enhancement Pass)
+
+### App Shell
+- Enhanced header with 20px height (was 72px)
+- Added gradient to logo background
+- Improved badge spacing and mobile responsiveness
+- Increased main content padding from py-8 to py-12
+- Wrapped TabsList in scrollable container for mobile
+
+### Component Updates
+- **PageHeader**: Updated to 12px bottom margin, 32px title with -0.02em tracking, 15px body text
+- **SectionCard**: 24px section title (was 20px), 6px padding with border-b separator between header/content
+- **ValidationBadge**: NEW - trust surface for NCAA compliance validation (proofed/flagged/pending)
+
+### Page Updates
+- **APIExplorer**: 
+  - Now uses PageHeader component
+  - Added "Trust Surfaces" section with StatusPill, CoveragePill, ValidationBadge
+  - Added "Data Provenance" section heading
+  - Improved spacing: 8pt between sections (was 6px)
+  - Better typography hierarchy with 18px component headers
+  - Enhanced hover states on endpoints
+  
+- **SchemaViewer**:
+  - Now uses PageHeader component
+  - Added icon backgrounds to layer cards
+  - Improved card hover states
+  - Better spacing in field lists (h-80 ScrollArea)
+  - Enhanced typography with 24px section titles
+
+### Typography Polish
+- All page titles: 32px (2rem) with -0.02em tracking
+- Section titles: 24px (1.5rem) with -0.01em tracking
+- Component headers: 18px (1.125rem) medium weight
+- Body text: 15px (0.9375rem) with 1.6 line-height
+- Meta text: 13px (0.8125rem) uppercase with wider tracking for labels
