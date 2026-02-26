@@ -1,6 +1,7 @@
 interface Env {
   BSI_API_KEY?: string;
   RATE_LIMIT_KV?: KVNamespace;
+  TEAM_STATS_KV?: KVNamespace;
 }
 
 interface RateLimitData {
@@ -33,6 +34,19 @@ export default {
       'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
       'Content-Type': 'application/json',
     };
+
+    if (url.pathname === '/api/proxy' && request.method === 'POST') {
+      return handleProxyRequest(request, corsHeaders);
+    }
+
+    if (url.pathname === '/api/sec-teams' && request.method === 'GET') {
+      return handleSECTeamsRequest(env, corsHeaders);
+    }
+
+    if (url.pathname.startsWith('/api/team/') && request.method === 'GET') {
+      const teamId = url.pathname.split('/').pop();
+      return handleTeamRequest(teamId || '', env, corsHeaders);
+    }
 
     if (url.pathname === '/health' || url.pathname === '/' || url.pathname === '/favicon.svg' || url.pathname === '/favicon.ico') {
       if (url.pathname === '/health') {
@@ -459,4 +473,107 @@ async function handleToolCall(name: string, args: any): Promise<any> {
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
+}
+
+async function handleProxyRequest(request: Request, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const body = await request.json();
+    const { url, method = 'GET', headers = {}, body: requestBody } = body;
+
+    if (!url) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'URL is required' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const fetchOptions: RequestInit = {
+      method,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; BSI-Scraper/1.0)',
+        ...headers,
+      },
+    };
+
+    if (requestBody && method !== 'GET') {
+      fetchOptions.body = typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody);
+    }
+
+    const response = await fetch(url, fetchOptions);
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    let data: any;
+    let text: string | undefined;
+
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else if (contentType.includes('application/pdf')) {
+      const arrayBuffer = await response.arrayBuffer();
+      data = Array.from(new Uint8Array(arrayBuffer));
+    } else {
+      text = await response.text();
+      data = text;
+    }
+
+    return new Response(
+      JSON.stringify({
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders,
+        data,
+        text,
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: any) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        status: 0,
+        statusText: 'Network Error',
+        headers: {},
+        data: null,
+        error: error.message,
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleSECTeamsRequest(env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  const teams = [
+    'texas', 'alabama', 'arkansas', 'auburn', 'florida', 'georgia',
+    'kentucky', 'lsu', 'mississippi-state', 'missouri', 'ole-miss',
+    'south-carolina', 'tennessee', 'texas-am', 'vanderbilt', 'oklahoma'
+  ];
+
+  return new Response(
+    JSON.stringify({ teams }),
+    { headers: corsHeaders }
+  );
+}
+
+async function handleTeamRequest(teamId: string, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  if (!env.TEAM_STATS_KV) {
+    return new Response(
+      JSON.stringify({ error: 'Team stats storage not configured' }),
+      { status: 503, headers: corsHeaders }
+    );
+  }
+
+  const cachedData = await env.TEAM_STATS_KV.get(`team:${teamId}`);
+  
+  if (cachedData) {
+    return new Response(cachedData, { headers: corsHeaders });
+  }
+
+  return new Response(
+    JSON.stringify({ error: 'Team data not found', teamId }),
+    { status: 404, headers: corsHeaders }
+  );
 }

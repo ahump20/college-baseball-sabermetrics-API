@@ -11,6 +11,12 @@ enabled = true
 # binding = "RATE_LIMIT_KV"
 # id = "your-kv-namespace-id-here"
 
+# KV Namespace for team stats caching (create with: wrangler kv:namespace create TEAM_STATS_KV)
+# Uncomment and add your KV namespace ID after creating it
+# [[kv_namespaces]]
+# binding = "TEAM_STATS_KV"
+# id = "your-team-stats-kv-namespace-id-here"
+
 # Secrets (set via: wrangler secret put BSI_API_KEY)
 # BSI_API_KEY - API key for authentication (leave unset for no auth)
 
@@ -22,3 +28,8 @@ routes = [
 # Custom domains configuration
 [[custom_domains]]
 hostname = "sabermetrics.blazesportsintel.com"
+
+# Cron triggers for automated data scraping
+# Run daily at 6 AM UTC to refresh Texas stats
+[triggers]
+crons = ["0 6 * * *"]
