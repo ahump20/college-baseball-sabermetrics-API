@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball, Flame, Key, ListNumbers } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -13,6 +13,7 @@ import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
 import { GameScoreboard } from '@/components/GameScoreboard';
 import { APIAccessDocs } from '@/components/APIAccessDocs';
+import { PlayerLeaderboards } from '@/components/PlayerLeaderboards';
 import { PageLoading } from '@/components/Loading';
 import { usePageLoading } from '@/hooks/use-loading';
 import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
@@ -87,6 +88,10 @@ function App() {
                 <ArrowsLeftRight size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">Compare</span>
               </TabsTrigger>
+              <TabsTrigger value="leaderboards" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+                <ListNumbers size={18} weight="bold" />
+                <span className="font-medium text-[0.875rem]">Leaderboards</span>
+              </TabsTrigger>
               <TabsTrigger value="players" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
                 <Users size={18} weight="bold" />
                 <span className="font-medium text-[0.875rem]">Players</span>
@@ -133,6 +138,10 @@ function App() {
 
             <TabsContent value="comparison" className="mt-0 space-y-6">
               <ComparisonTool />
+            </TabsContent>
+
+            <TabsContent value="leaderboards" className="mt-0 space-y-6">
+              <PlayerLeaderboards />
             </TabsContent>
 
             <TabsContent value="players" className="mt-0 space-y-6">
