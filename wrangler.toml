@@ -10,6 +10,7 @@ enabled = true
 # Or create manually with:
 #   wrangler kv:namespace create RATE_LIMIT_KV
 #   wrangler kv:namespace create TEAM_STATS_KV
+#   wrangler kv:namespace create BSI_CACHE
 # Then uncomment and paste the IDs below:
 
 # [[kv_namespaces]]
@@ -19,6 +20,10 @@ enabled = true
 # [[kv_namespaces]]
 # binding = "TEAM_STATS_KV"
 # id = "YOUR_TEAM_STATS_KV_ID_HERE"
+
+# [[kv_namespaces]]
+# binding = "BSI_CACHE"
+# id = "YOUR_BSI_CACHE_KV_ID_HERE"
 
 # Secrets (set via: wrangler secret put BSI_API_KEY)
 # BSI_API_KEY - API key for authentication (leave unset for no auth)

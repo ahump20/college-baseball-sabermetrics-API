@@ -2,6 +2,7 @@ interface Env {
   BSI_API_KEY?: string;
   RATE_LIMIT_KV?: KVNamespace;
   TEAM_STATS_KV?: KVNamespace;
+  BSI_CACHE?: KVNamespace;
 }
 
 interface RateLimitData {
@@ -75,6 +76,42 @@ export default {
         );
       }
       return new Response('OK', { headers: corsHeaders });
+    }
+
+    if (url.pathname === '/api/college-baseball/scoreboard' && request.method === 'GET') {
+      return handleScoreboard(request, env, corsHeaders);
+    }
+
+    if (url.pathname === '/api/college-baseball/standings' && request.method === 'GET') {
+      return handleStandings(url, env, corsHeaders);
+    }
+
+    if (url.pathname === '/api/college-baseball/rankings' && request.method === 'GET') {
+      return handleRankings(env, corsHeaders);
+    }
+
+    if (url.pathname.match(/^\/api\/college-baseball\/players\/[^/]+$/) && request.method === 'GET') {
+      const playerName = decodeURIComponent(url.pathname.split('/').pop() || '');
+      return handlePlayerStats(playerName, env, corsHeaders);
+    }
+
+    if (url.pathname === '/api/college-baseball/sabermetrics/conference' && request.method === 'GET') {
+      return handleConferencePowerIndex(env, corsHeaders);
+    }
+
+    if (url.pathname === '/api/college-baseball/sabermetrics/batting' && request.method === 'GET') {
+      return handleSabermetricsLeaderboard(url, env, corsHeaders);
+    }
+
+    if (url.pathname.match(/^\/api\/college-baseball\/sabermetrics\/team\/[^/]+$/) && request.method === 'GET') {
+      const teamSlug = url.pathname.split('/').pop() || '';
+      return handleTeamSabermetrics(teamSlug, env, corsHeaders);
+    }
+
+    if (url.pathname.match(/^\/api\/college-baseball\/team\/[^/]+\/schedule$/) && request.method === 'GET') {
+      const pathParts = url.pathname.split('/');
+      const teamSlug = pathParts[pathParts.length - 2] || '';
+      return handleTeamSchedule(teamSlug, env, corsHeaders);
     }
 
     if ((url.pathname.startsWith('/api/') || url.pathname === '/mcp') && request.method === 'POST') {
@@ -747,6 +784,623 @@ function generateMockTeamData(teamId: string) {
     players,
     source: 'automated-scraping',
   };
+}
+
+const ESPN_TEAM_IDS: Record<string, number> = {
+  'texas': 251,
+  'lsu': 99,
+  'vanderbilt': 238,
+  'arkansas': 8,
+  'tennessee': 2633,
+  'florida': 57,
+  'mississippi-state': 344,
+  'ole-miss': 145,
+  'georgia': 61,
+  'texas-am': 245,
+  'auburn': 2,
+  'alabama': 333,
+  'south-carolina': 2579,
+  'kentucky': 96,
+  'missouri': 142,
+  'oklahoma': 201,
+  'miami': 2390,
+  'georgia-tech': 59,
+  'ucla': 26,
+  'usc': 68,
+  'stanford': 24,
+  'arizona': 12,
+  'arizona-state': 9,
+  'oregon-state': 258,
+  'clemson': 228,
+  'nc-state': 152,
+  'wake-forest': 154,
+  'duke': 150,
+  'north-carolina': 153,
+  'virginia': 258,
+};
+
+const CONFERENCE_GROUP_IDS: Record<string, number> = {
+  'SEC': 8,
+  'ACC': 2,
+  'Big12': 4,
+  'Big10': 5,
+  'PAC': 9,
+  'American': 62,
+  'SunBelt': 37,
+  'CUSA': 11,
+  'MWC': 44,
+  'WAC': 30,
+};
+
+async function handleScoreboard(request: Request, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
+    const response = await fetch(`${ESPN_BASE}/scoreboard?limit=50`);
+    
+    if (!response.ok) {
+      throw new Error(`ESPN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return new Response(JSON.stringify(data), { headers: corsHeaders });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Scoreboard fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleStandings(url: URL, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const conference = url.searchParams.get('conference') || 'SEC';
+    const groupId = CONFERENCE_GROUP_IDS[conference];
+
+    if (!groupId) {
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid conference',
+          status: 400,
+          known_conferences: Object.keys(CONFERENCE_GROUP_IDS),
+          request_id: crypto.randomUUID(),
+        }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const ESPN_BASE = 'https://site.api.espn.com/apis/v2/sports/baseball/college-baseball';
+    let standingsUrl = `${ESPN_BASE}/standings?group=${groupId}`;
+    
+    let response = await fetch(standingsUrl);
+    let data: any = await response.json();
+
+    if (!data.children || data.children.length === 0 || !data.children[0].standings?.entries) {
+      standingsUrl = `${ESPN_BASE}/standings?group=${groupId}&season=2026`;
+      response = await fetch(standingsUrl);
+      data = await response.json();
+    }
+
+    if (!response.ok) {
+      throw new Error(`ESPN API error: ${response.status}`);
+    }
+
+    const entries = data.children?.[0]?.standings?.entries || [];
+    
+    const parsedStandings = entries.map((entry: any) => {
+      const stats = entry.stats || [];
+      
+      const getStat = (name: string, type?: string) => {
+        const stat = stats.find((s: any) => 
+          s.name === name && (!type || s.type === type)
+        );
+        return stat?.value || stat?.displayValue || 0;
+      };
+
+      const overallWins = getStat('wins', 'total') || getStat('wins');
+      const overallLosses = getStat('losses', 'total') || getStat('losses');
+      const winPct = getStat('winPercent', 'total') || getStat('winPercent');
+      const confWins = getStat('wins', 'vs. conf.');
+      const confLosses = getStat('losses', 'vs. conf.');
+      const streak = getStat('streak');
+      const pointDiff = getStat('pointDifferential');
+
+      return {
+        team: entry.team?.displayName || 'Unknown',
+        logo: entry.team?.logos?.[0]?.href || '',
+        overallRecord: {
+          wins: parseInt(overallWins) || 0,
+          losses: parseInt(overallLosses) || 0,
+          winPct: parseFloat(winPct) || 0,
+        },
+        conferenceRecord: {
+          wins: parseInt(confWins) || 0,
+          losses: parseInt(confLosses) || 0,
+        },
+        streak: streak || 'N/A',
+        pointDifferential: parseFloat(pointDiff) || 0,
+      };
+    });
+
+    return new Response(
+      JSON.stringify({
+        conference,
+        season: 2026,
+        data: parsedStandings,
+        meta: {
+          source: 'ESPN',
+          fetched_at: new Date().toISOString(),
+        },
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Standings fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleRankings(env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
+    const response = await fetch(`${ESPN_BASE}/rankings`);
+    
+    if (!response.ok) {
+      throw new Error(`ESPN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const rankings = data?.rankings?.[0]?.ranks ?? [];
+
+    const parsedRankings = rankings.map((rank: any) => ({
+      current: rank.current || 0,
+      previous: rank.previous || null,
+      points: rank.points || 0,
+      trend: (rank.current && rank.previous) ? rank.previous - rank.current : 0,
+      team: {
+        name: rank.team?.displayName || 'Unknown',
+        logo: rank.team?.logos?.[0]?.href || '',
+        record: rank.recordSummary || 'N/A',
+      },
+    }));
+
+    return new Response(JSON.stringify(parsedRankings), { headers: corsHeaders });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Rankings fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handlePlayerStats(playerName: string, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    if (!playerName) {
+      return new Response(
+        JSON.stringify({
+          error: 'Player name required',
+          status: 400,
+          request_id: crypto.randomUUID(),
+        }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
+    const searchUrl = `${ESPN_BASE}/athletes?search=${encodeURIComponent(playerName)}&limit=5`;
+    const searchResponse = await fetch(searchUrl);
+
+    if (!searchResponse.ok) {
+      throw new Error(`ESPN search error: ${searchResponse.status}`);
+    }
+
+    const searchData = await searchResponse.json();
+    const athletes = searchData.athletes || [];
+
+    if (athletes.length === 0) {
+      return new Response(
+        JSON.stringify({
+          players: [],
+          reason: 'No players found matching search criteria',
+          status: 'not_found',
+          search: playerName,
+        }),
+        { headers: corsHeaders }
+      );
+    }
+
+    const playersData = await Promise.all(
+      athletes.slice(0, 3).map(async (athlete: any) => {
+        const athleteId = athlete.id;
+        const profileData = {
+          name: athlete.displayName || athlete.fullName || 'Unknown',
+          team: athlete.team?.displayName || 'Unknown',
+          position: athlete.position?.abbreviation || 'N/A',
+          jersey: athlete.jersey || 'N/A',
+          headshot: athlete.headshot?.href || '',
+          stats_available: false,
+        };
+
+        try {
+          const statsUrl = `${ESPN_BASE}/athletes/${athleteId}/stats`;
+          const statsResponse = await fetch(statsUrl);
+          
+          if (statsResponse.ok) {
+            const statsData = await statsResponse.json();
+            if (statsData.statistics && statsData.statistics.length > 0) {
+              return {
+                ...profileData,
+                stats: statsData.statistics,
+                stats_available: true,
+              };
+            }
+          }
+        } catch (e) {
+        }
+
+        return profileData;
+      })
+    );
+
+    return new Response(
+      JSON.stringify({
+        players: playersData,
+        reason: playersData.some(p => p.stats_available) ? null : 'Stats not yet available for 2026 season',
+        status: playersData.some(p => p.stats_available) ? 'success' : 'early_season',
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Player stats fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleConferencePowerIndex(env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const cacheKey = 'cpi:all:2026';
+    
+    if (env.BSI_CACHE) {
+      const cached = await env.BSI_CACHE.get(cacheKey);
+      if (cached) {
+        return new Response(cached, { headers: corsHeaders });
+      }
+    }
+
+    const ESPN_BASE = 'https://site.api.espn.com/apis/v2/sports/baseball/college-baseball';
+    const conferences = Object.entries(CONFERENCE_GROUP_IDS);
+    const conferenceData: any[] = [];
+    const skipped: string[] = [];
+
+    for (const [confName, groupId] of conferences) {
+      try {
+        const response = await fetch(`${ESPN_BASE}/standings?group=${groupId}`);
+        const data = await response.json();
+        const entries = data.children?.[0]?.standings?.entries || [];
+
+        if (entries.length === 0) {
+          skipped.push(confName);
+          continue;
+        }
+
+        const teamStats = entries.map((entry: any, idx: number) => {
+          const stats = entry.stats || [];
+          const winPct = parseFloat(
+            stats.find((s: any) => s.name === 'winPercent')?.value || '0'
+          );
+          const recencyWeight = 1.0 - (idx * 0.05);
+          return { winPct, weight: Math.max(recencyWeight, 0.5) };
+        });
+
+        const weightedSum = teamStats.reduce((sum, t) => sum + (t.winPct * t.weight), 0);
+        const totalWeight = teamStats.reduce((sum, t) => sum + t.weight, 0);
+        const cpi = totalWeight > 0 ? weightedSum / totalWeight : 0;
+        const avgWinPct = teamStats.length > 0 
+          ? teamStats.reduce((sum, t) => sum + t.winPct, 0) / teamStats.length 
+          : 0;
+
+        conferenceData.push({
+          conference: confName,
+          cpi: parseFloat(cpi.toFixed(4)),
+          teamCount: entries.length,
+          avgWinPct: parseFloat(avgWinPct.toFixed(4)),
+          topTeam: entries[0]?.team?.displayName || 'Unknown',
+        });
+      } catch (e) {
+        skipped.push(confName);
+      }
+    }
+
+    conferenceData.sort((a, b) => b.cpi - a.cpi);
+    conferenceData.forEach((conf, idx) => {
+      conf.rank = idx + 1;
+    });
+
+    const result = {
+      conferences: conferenceData,
+      computed_at: new Date().toISOString(),
+      season: 2026,
+      meta: {
+        skipped: skipped.length > 0 ? skipped : undefined,
+      },
+    };
+
+    const resultJson = JSON.stringify(result);
+
+    if (env.BSI_CACHE) {
+      await env.BSI_CACHE.put(cacheKey, resultJson, { expirationTtl: 21600 });
+    }
+
+    return new Response(resultJson, { headers: corsHeaders });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Conference Power Index calculation failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleSabermetricsLeaderboard(url: URL, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const metric = url.searchParams.get('metric') || 'woba';
+    const type = url.searchParams.get('type') || 'batting';
+    const limit = parseInt(url.searchParams.get('limit') || '20');
+
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
+    const response = await fetch(`${ESPN_BASE}/leaders?group=50`);
+
+    if (!response.ok) {
+      throw new Error(`ESPN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    if (!data.leaders || data.leaders.length === 0) {
+      return new Response(
+        JSON.stringify({
+          available: false,
+          reason: 'Insufficient plate appearance data for 2026 season',
+          fallback: 'Check back after week 4',
+          metric,
+          type,
+        }),
+        { headers: corsHeaders }
+      );
+    }
+
+    const leaderboard = data.leaders
+      .slice(0, limit)
+      .map((leader: any, idx: number) => ({
+        rank: idx + 1,
+        player: leader.athlete?.displayName || 'Unknown',
+        team: leader.athlete?.team?.displayName || 'Unknown',
+        conference: leader.athlete?.team?.conference?.name || 'Unknown',
+        value: leader.value || 0,
+        displayValue: leader.displayValue || '0',
+        pa: leader.statistics?.plateAppearances || 0,
+      }));
+
+    return new Response(
+      JSON.stringify({
+        leaderboard,
+        metric,
+        type,
+        season: 2026,
+        note: 'Computed from available ESPN stats - full sabermetrics require additional data sources',
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Sabermetrics leaderboard fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleTeamSabermetrics(teamSlug: string, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const espnId = ESPN_TEAM_IDS[teamSlug];
+
+    if (!espnId) {
+      return new Response(
+        JSON.stringify({
+          error: 'Team not found',
+          status: 400,
+          known_teams: Object.keys(ESPN_TEAM_IDS),
+          request_id: crypto.randomUUID(),
+        }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
+    const response = await fetch(`${ESPN_BASE}/teams/${espnId}/statistics`);
+
+    if (!response.ok) {
+      throw new Error(`ESPN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    
+    const batting: Record<string, any> = {};
+    const pitching: Record<string, any> = {};
+
+    if (data.statistics) {
+      data.statistics.forEach((stat: any) => {
+        if (stat.type === 'batting') {
+          batting.avg = stat.stats?.find((s: any) => s.name === 'avg')?.value || 0;
+          batting.obp = stat.stats?.find((s: any) => s.name === 'onBasePct')?.value || 0;
+          batting.slg = stat.stats?.find((s: any) => s.name === 'slugPct')?.value || 0;
+          batting.ops = batting.obp + batting.slg;
+        } else if (stat.type === 'pitching') {
+          pitching.era = stat.stats?.find((s: any) => s.name === 'era')?.value || 0;
+          pitching.whip = stat.stats?.find((s: any) => s.name === 'whip')?.value || 0;
+          pitching.k9 = stat.stats?.find((s: any) => s.name === 'strikeoutsPer9')?.value || 0;
+          pitching.bb9 = stat.stats?.find((s: any) => s.name === 'walksPer9')?.value || 0;
+        }
+      });
+    }
+
+    const recordResponse = await fetch(`${ESPN_BASE}/teams/${espnId}`);
+    let record = { wins: 0, losses: 0 };
+    
+    if (recordResponse.ok) {
+      const recordData = await recordResponse.json();
+      if (recordData.team?.record) {
+        record.wins = recordData.team.record.items?.[0]?.stats?.find((s: any) => s.name === 'wins')?.value || 0;
+        record.losses = recordData.team.record.items?.[0]?.stats?.find((s: any) => s.name === 'losses')?.value || 0;
+      }
+    }
+
+    return new Response(
+      JSON.stringify({
+        team: teamSlug,
+        espnId,
+        season: 2026,
+        batting,
+        pitching,
+        record,
+        computed_at: new Date().toISOString(),
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Team sabermetrics fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleTeamSchedule(teamSlug: string, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const espnId = ESPN_TEAM_IDS[teamSlug];
+
+    if (!espnId) {
+      return new Response(
+        JSON.stringify({
+          error: 'Team not found',
+          status: 400,
+          known_teams: Object.keys(ESPN_TEAM_IDS),
+          request_id: crypto.randomUUID(),
+        }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
+    const response = await fetch(`${ESPN_BASE}/teams/${espnId}/schedule?season=2026`);
+
+    if (!response.ok) {
+      throw new Error(`ESPN API error: ${response.status}`);
+    }
+
+    const data = await response.json();
+    const events = data.events || [];
+
+    const completed: any[] = [];
+    const upcoming: any[] = [];
+    const now = new Date();
+
+    events.forEach((event: any) => {
+      const gameDate = new Date(event.date);
+      const competition = event.competitions?.[0];
+      const opponent = competition?.competitors?.find((c: any) => c.team.id != espnId);
+      const teamComp = competition?.competitors?.find((c: any) => c.team.id == espnId);
+      
+      const gameInfo = {
+        date: event.date,
+        opponent: opponent?.team?.displayName || 'Unknown',
+        homeAway: teamComp?.homeAway || 'unknown',
+        result: competition?.status?.type?.completed 
+          ? (teamComp?.winner ? 'W' : 'L')
+          : 'scheduled',
+        score: competition?.status?.type?.completed
+          ? `${teamComp?.score || 0}-${opponent?.score || 0}`
+          : null,
+        venue: competition?.venue?.fullName || 'TBD',
+        broadcast: competition?.broadcasts?.[0]?.names?.[0] || null,
+      };
+
+      if (gameDate < now && competition?.status?.type?.completed) {
+        completed.push(gameInfo);
+      } else {
+        upcoming.push(gameInfo);
+      }
+    });
+
+    const wins = completed.filter(g => g.result === 'W').length;
+    const losses = completed.filter(g => g.result === 'L').length;
+
+    return new Response(
+      JSON.stringify({
+        team: teamSlug,
+        season: 2026,
+        record: `${wins}-${losses}`,
+        next_game: upcoming[0] || null,
+        completed,
+        upcoming,
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Unknown error';
+    return new Response(
+      JSON.stringify({
+        error: 'Team schedule fetch failed',
+        status: 500,
+        message,
+        request_id: crypto.randomUUID(),
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
 }
 
 async function refreshTeamStats(env: Env): Promise<void> {
