@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useESPNScoreboard, ESPNGame } from '@/hooks/use-espn-scoreboard';
+import { GameDetailModal } from '@/components/GameDetailModal';
 import { Calendar, Clock, MapPin, Trophy, ArrowClockwise, Broadcast, Circle } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -17,6 +18,8 @@ export function LiveGameScores() {
   const [autoRefreshEnabled, setAutoRefreshEnabled] = useState(true);
   const { games, isLoading, error, refetch, liveGameCount, hasLiveGames, lastUpdated } = useESPNScoreboard(selectedDate, autoRefreshEnabled);
   const [previousLiveCount, setPreviousLiveCount] = useState(0);
+  const [selectedGame, setSelectedGame] = useState<ESPNGame | null>(null);
+  const [modalOpen, setModalOpen] = useState(false);
 
   useEffect(() => {
     if (liveGameCount > previousLiveCount && previousLiveCount > 0) {
@@ -39,9 +42,21 @@ export function LiveGameScores() {
     return { label: status.detail, variant: 'outline' as const, isLive: false };
   };
 
+  const handleGameClick = (game: ESPNGame) => {
+    setSelectedGame(game);
+    setModalOpen(true);
+  };
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col gap-4">
+    <>
+      <GameDetailModal 
+        game={selectedGame} 
+        open={modalOpen} 
+        onOpenChange={setModalOpen}
+      />
+      
+      <div className="space-y-6">
+        <div className="flex flex-col gap-4">
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div>
             <h3 className="text-xl font-semibold text-foreground mb-1">
@@ -142,11 +157,12 @@ export function LiveGameScores() {
                   transition={{ duration: 0.2 }}
                 >
                   <Card 
-                    className={`p-5 transition-all ${
+                    className={`p-5 transition-all cursor-pointer ${
                       status.isLive 
-                        ? 'ring-2 ring-success shadow-lg shadow-success/20' 
-                        : 'hover:shadow-md'
+                        ? 'ring-2 ring-success shadow-lg shadow-success/20 hover:shadow-xl' 
+                        : 'hover:shadow-md hover:border-primary/50'
                     }`}
+                    onClick={() => handleGameClick(game)}
                   >
                     <div className="flex flex-col gap-4">
                       <div className="flex items-center justify-between">
@@ -251,6 +267,7 @@ export function LiveGameScores() {
           </motion.div>
         </AnimatePresence>
       )}
-    </div>
+      </div>
+    </>
   );
 }
