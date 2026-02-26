@@ -1,3 +1,4 @@
+import { useState, useRef, useEffect } from 'react';
 import {
   Table,
   TableBody,
@@ -7,6 +8,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 interface Column {
   key: string;
@@ -21,19 +23,57 @@ interface DataTableProps {
   data: Record<string, any>[];
   maxHeight?: string;
   stickyHeader?: boolean;
+  className?: string;
 }
 
-export function DataTable({ columns, data, maxHeight = '600px', stickyHeader = true }: DataTableProps) {
+export function DataTable({ 
+  columns, 
+  data, 
+  maxHeight = '600px', 
+  stickyHeader = true,
+  className 
+}: DataTableProps) {
+  const [isScrolled, setIsScrolled] = useState(false);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const scrollEl = scrollRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    if (!scrollEl) return;
+
+    const handleScroll = () => {
+      setIsScrolled(scrollEl.scrollTop > 0);
+    };
+
+    scrollEl.addEventListener('scroll', handleScroll);
+    return () => scrollEl.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
-    <div className="rounded-md border border-border overflow-hidden">
-      <ScrollArea className={`w-full ${maxHeight ? `max-h-[${maxHeight}]` : ''}`}>
+    <div className={cn("rounded-md border border-border overflow-hidden bg-card", className)}>
+      <ScrollArea 
+        ref={scrollRef}
+        className="w-full" 
+        style={{ maxHeight }}
+      >
         <Table>
-          <TableHeader className={stickyHeader ? 'sticky top-0 bg-muted z-10' : ''}>
-            <TableRow>
+          <TableHeader 
+            className={cn(
+              stickyHeader && "sticky top-0 bg-muted/80 backdrop-blur-sm z-10",
+              isScrolled && stickyHeader && "shadow-sm"
+            )}
+          >
+            <TableRow className="hover:bg-transparent">
               {columns.map((col) => (
                 <TableHead
                   key={col.key}
-                  className={`${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.mono ? 'font-mono' : ''} ${col.width ? col.width : ''}`}
+                  className={cn(
+                    "text-[0.8125rem] font-medium",
+                    col.align === 'right' && 'text-right',
+                    col.align === 'center' && 'text-center',
+                    col.align === 'left' && 'text-left',
+                    col.mono && 'font-mono'
+                  )}
+                  style={{ width: col.width }}
                 >
                   {col.label}
                 </TableHead>
@@ -42,18 +82,30 @@ export function DataTable({ columns, data, maxHeight = '600px', stickyHeader = t
           </TableHeader>
           <TableBody>
             {data.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={columns.length} className="text-center py-8 text-muted-foreground">
+              <TableRow className="hover:bg-transparent">
+                <TableCell 
+                  colSpan={columns.length} 
+                  className="text-center py-12 text-muted-foreground text-[0.875rem]"
+                >
                   No data available
                 </TableCell>
               </TableRow>
             ) : (
               data.map((row, idx) => (
-                <TableRow key={idx} className="hover:bg-muted/30">
+                <TableRow 
+                  key={idx} 
+                  className="hover:bg-muted/40 transition-colors"
+                >
                   {columns.map((col) => (
                     <TableCell
                       key={col.key}
-                      className={`${col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left'} ${col.mono ? 'font-mono text-sm' : ''}`}
+                      className={cn(
+                        "text-[0.875rem]",
+                        col.align === 'right' && 'text-right tabular-nums',
+                        col.align === 'center' && 'text-center',
+                        col.align === 'left' && 'text-left',
+                        col.mono && 'font-mono text-[0.8125rem]'
+                      )}
                     >
                       {row[col.key] ?? '—'}
                     </TableCell>

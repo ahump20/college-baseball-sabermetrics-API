@@ -20,18 +20,23 @@ The platform now implements a strict, testable design system with:
 - `StatusPill` - Provisional/Official/Corrected status badges with icons
 - `CoveragePill` - Box-only/PBP/Tracking coverage indicators
 - `ProvenanceSnippet` - Data source and timestamp display
-- `SectionCard` - Consistent card wrapper with title/description/actions
-- `CodeBlock` - Syntax-highlighted code with copy functionality
-- `DataTable` - Reusable table with sticky headers and monospace support
-- `ContextPanel` - Right-side detail panel for selected entities
+- `SectionCard` - Consistent card wrapper with 24px padding, title/description/actions
+- `CodeBlock` - Syntax-highlighted code with copy functionality and improved styling
+- `DataTable` - Enhanced table with sticky headers, scroll shadows, and monospace support
+- `ContextPanel` - Right-side detail drawer for entity exploration (400px desktop, full mobile)
+- `PageHeader` - Standardized page titles with 32px heading and optional badges/actions
 
-**Typography & Spacing System**:
-- Page Title: 32px Inter SemiBold, -0.02em tracking
-- Section Title: 24px Inter SemiBold, -0.01em tracking  
-- Component Header: 18px Inter Medium
-- Body: 15px Inter Regular, 1.6 line height
-- Code/Data: 14px JetBrains Mono Regular
-- Spacing scale: 4px, 8px, 12px, 16px, 24px, 32px, 48px (strict adherence)
+**Typography & Spacing System** (Strict Adherence):
+- Page Title: 32px (2rem) Inter SemiBold, -0.02em tracking
+- Section Title: 24px (1.5rem) Inter SemiBold, -0.01em tracking
+- Subsection: 20px (1.25rem) Inter SemiBold
+- Component Header: 18px (1.125rem) Inter Medium
+- Body: 15px (0.9375rem) Inter Regular, 1.6 line-height
+- Body Small: 14px (0.875rem) Inter Regular
+- Code/Data: 14px (0.875rem) JetBrains Mono Regular, 1.5 line-height
+- Label: 13px (0.8125rem) Inter Medium, 0.005em tracking
+- Meta: 12px (0.75rem) Inter Regular, 0.01em tracking
+- Spacing scale: 4px, 8px, 12px, 16px, 24px, 32px, 48px (no arbitrary values)
 
 **Trust Surfaces** (visible across all pages):
 - Status indicators on every data point
