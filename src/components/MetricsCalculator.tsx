@@ -63,13 +63,16 @@ export function MetricsCalculator() {
 
       case 'wrc_plus': {
         const woba = inputs.woba || 0;
+        const pa = inputs.pa || 0;
         const lgWoba = inputs.lg_woba || 0.34;
         const wobaScale = inputs.woba_scale || 1.24;
         const lgRPA = inputs.lg_r_pa || 0.122;
         const parkFactor = inputs.park_factor || 1.0;
 
-        const wRC = ((woba - lgWoba) / wobaScale + lgRPA) / parkFactor;
-        calculated = (wRC / lgRPA) * 100;
+        const wRC = ((woba - lgWoba) / wobaScale + lgRPA) * pa;
+        const wRCPerPA = wRC / (pa || 1);
+        const parkAdjusted = wRCPerPA / parkFactor;
+        calculated = (parkAdjusted / lgRPA) * 100;
         break;
       }
 
@@ -198,6 +201,100 @@ export function MetricsCalculator() {
         const totalSpin = inputs.total_spin || 0;
         const fbCount = inputs.fb_count || 0;
         calculated = totalSpin / (fbCount || 1);
+        break;
+      }
+
+      case 'sweet_spot_pct': {
+        const sweetSpot = inputs.sweet_spot || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (sweetSpot / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'max_ev': {
+        calculated = inputs.max_ev_value || 0;
+        break;
+      }
+
+      case 'avg_launch_angle': {
+        const totalLA = inputs.total_la || 0;
+        const bipCount = inputs.bip_count || 0;
+        calculated = totalLA / (bipCount || 1);
+        break;
+      }
+
+      case 'groundball_pct': {
+        const groundballs = inputs.groundballs || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (groundballs / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'flyball_pct': {
+        const flyballs = inputs.flyballs || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (flyballs / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'linedrive_pct': {
+        const linedrives = inputs.linedrives || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (linedrives / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'pull_pct': {
+        const pulled = inputs.pulled || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (pulled / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'oppo_pct': {
+        const opposite = inputs.opposite || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (opposite / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'whiff_rate': {
+        const whiffs = inputs.whiffs || 0;
+        const totalSwings = inputs.total_swings || 0;
+        calculated = (whiffs / (totalSwings || 1)) * 100;
+        break;
+      }
+
+      case 'chase_rate': {
+        const oSwing = inputs.o_swing || 0;
+        const oPitch = inputs.o_pitch || 0;
+        calculated = (oSwing / (oPitch || 1)) * 100;
+        break;
+      }
+
+      case 'zone_contact': {
+        const zContact = inputs.z_contact || 0;
+        const zSwing = inputs.z_swing || 0;
+        calculated = (zContact / (zSwing || 1)) * 100;
+        break;
+      }
+
+      case 'swing_pct': {
+        const totalSwings = inputs.total_swings || 0;
+        const totalPitches = inputs.total_pitches || 0;
+        calculated = (totalSwings / (totalPitches || 1)) * 100;
+        break;
+      }
+
+      case 'first_pitch_strike': {
+        const fpStrikes = inputs.fp_strikes || 0;
+        const battersFaced = inputs.batters_faced || 0;
+        calculated = (fpStrikes / (battersFaced || 1)) * 100;
+        break;
+      }
+
+      case 'stuff_plus': {
+        calculated = inputs.stuff_model || 100;
         break;
       }
     }

@@ -1012,6 +1012,189 @@ export const metrics: Metric[] = [
     ],
     contextAdjustments: ['Pitch type', 'Release point', 'Velocity'],
   },
+  {
+    id: 'sweet_spot_pct',
+    name: 'Sweet Spot% (Launch Angle 8-32°)',
+    category: 'tracking-required',
+    formula: 'Batted balls with LA 8-32° / Total BIP × 100',
+    description:
+      'Percentage of batted balls in the optimal launch angle range (8-32 degrees). Sweet spot contact produces the highest batting average and slugging percentage.',
+    inputs: [
+      { name: 'sweet_spot', label: 'Sweet Spot BBE', type: 'number', placeholder: '56' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Batted ball distribution', 'Player approach'],
+  },
+  {
+    id: 'max_ev',
+    name: 'Max Exit Velocity',
+    category: 'tracking-required',
+    formula: 'MAX(exit_velocity)',
+    description:
+      'Highest recorded exit velocity for a player. Indicates maximum power potential and bat speed capability.',
+    inputs: [
+      { name: 'max_ev_value', label: 'Max EV (mph)', type: 'number', placeholder: '112.3', min: 0, max: 130 },
+    ],
+    contextAdjustments: ['Weather conditions', 'Ball type', 'Measurement calibration'],
+  },
+  {
+    id: 'avg_launch_angle',
+    name: 'Avg Launch Angle',
+    category: 'tracking-required',
+    formula: 'Σ(launch_angle) / BIP_count',
+    description:
+      'Average launch angle on batted balls. Optimal ranges vary by player profile: ground ball (< 10°), line drive (10-25°), fly ball (25-50°).',
+    inputs: [
+      { name: 'total_la', label: 'Total LA (sum)', type: 'number', placeholder: '1817.6' },
+      { name: 'bip_count', label: 'Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Player swing type', 'Approach optimization'],
+  },
+  {
+    id: 'groundball_pct',
+    name: 'Ground Ball%',
+    category: 'tracking-required',
+    formula: 'Ground balls / Total BIP × 100',
+    description:
+      'Percentage of batted balls classified as ground balls. For pitchers, high GB% reduces home runs. For hitters, correlates with speed-based offense.',
+    inputs: [
+      { name: 'groundballs', label: 'Ground Balls', type: 'number', placeholder: '62' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Park factors', 'Infield defense quality'],
+  },
+  {
+    id: 'flyball_pct',
+    name: 'Fly Ball%',
+    category: 'tracking-required',
+    formula: 'Fly balls / Total BIP × 100',
+    description:
+      'Percentage of batted balls classified as fly balls. Correlates with power potential but also increases strikeout risk.',
+    inputs: [
+      { name: 'flyballs', label: 'Fly Balls', type: 'number', placeholder: '48' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Park factors', 'Outfield defense quality'],
+  },
+  {
+    id: 'linedrive_pct',
+    name: 'Line Drive%',
+    category: 'tracking-required',
+    formula: 'Line drives / Total BIP × 100',
+    description:
+      'Percentage of batted balls classified as line drives. Highest correlation with batting average and consistent production.',
+    inputs: [
+      { name: 'linedrives', label: 'Line Drives', type: 'number', placeholder: '32' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Scorer judgment', 'Tracking precision'],
+  },
+  {
+    id: 'pull_pct',
+    name: 'Pull%',
+    category: 'tracking-required',
+    formula: 'Pulled balls / Total BIP × 100',
+    description:
+      'Percentage of batted balls hit to pull side. High pull rates can indicate power but also defensive shift vulnerability.',
+    inputs: [
+      { name: 'pulled', label: 'Pulled Balls', type: 'number', placeholder: '58' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Shift deployment', 'Spray chart analysis'],
+  },
+  {
+    id: 'oppo_pct',
+    name: 'Opposite Field%',
+    category: 'tracking-required',
+    formula: 'Opposite field balls / Total BIP × 100',
+    description:
+      'Percentage of batted balls hit to opposite field. Indicates bat control and ability to use all fields.',
+    inputs: [
+      { name: 'opposite', label: 'Opposite Field Balls', type: 'number', placeholder: '28' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Two-strike approach', 'Defensive alignment'],
+  },
+  {
+    id: 'whiff_rate',
+    name: 'Whiff Rate (Swing & Miss)',
+    category: 'pbp-required',
+    formula: 'Swings & misses / Total swings × 100',
+    description:
+      'Percentage of swings resulting in misses. For pitchers, indicates swing-and-miss stuff. For hitters, shows contact issues.',
+    inputs: [
+      { name: 'whiffs', label: 'Swings & Misses', type: 'number', placeholder: '68' },
+      { name: 'total_swings', label: 'Total Swings', type: 'number', placeholder: '245' },
+    ],
+    contextAdjustments: ['Pitch type', 'Count leverage', 'Zone location'],
+  },
+  {
+    id: 'chase_rate',
+    name: 'Chase Rate (O-Swing%)',
+    category: 'pbp-required',
+    formula: 'Swings outside zone / Pitches outside zone × 100',
+    description:
+      'Percentage of pitches outside strike zone that result in swings. Lower is better for hitters (plate discipline), higher is better for pitchers.',
+    inputs: [
+      { name: 'o_swing', label: 'Swings Outside Zone', type: 'number', placeholder: '42' },
+      { name: 'o_pitch', label: 'Pitches Outside Zone', type: 'number', placeholder: '156' },
+    ],
+    contextAdjustments: ['Umpire zone', 'Count situation', 'Batter approach'],
+  },
+  {
+    id: 'zone_contact',
+    name: 'Z-Contact% (In-Zone Contact)',
+    category: 'pbp-required',
+    formula: 'Contact in zone / Swings in zone × 100',
+    description:
+      'Percentage of swings on pitches in the strike zone that result in contact. Measures ability to make contact on hittable pitches.',
+    inputs: [
+      { name: 'z_contact', label: 'Contact in Zone', type: 'number', placeholder: '178' },
+      { name: 'z_swing', label: 'Swings in Zone', type: 'number', placeholder: '198' },
+    ],
+    contextAdjustments: ['Two-strike approach', 'Pitch velocity', 'Breaking ball movement'],
+  },
+  {
+    id: 'swing_pct',
+    name: 'Swing% (Overall)',
+    category: 'pbp-required',
+    formula: 'Total swings / Total pitches × 100',
+    description:
+      'Percentage of all pitches swung at. Indicates overall aggressiveness. League average typically around 45-47%.',
+    inputs: [
+      { name: 'total_swings', label: 'Total Swings', type: 'number', placeholder: '245' },
+      { name: 'total_pitches', label: 'Total Pitches Seen', type: 'number', placeholder: '534' },
+    ],
+    contextAdjustments: ['Team approach', 'Count leverage', 'Game situation'],
+  },
+  {
+    id: 'first_pitch_strike',
+    name: 'First Pitch Strike%',
+    category: 'pbp-required',
+    formula: 'First pitch strikes / Total batters faced × 100',
+    description:
+      'Percentage of plate appearances where first pitch is a strike. Critical pitching metric - strong correlation with overall success.',
+    inputs: [
+      { name: 'fp_strikes', label: 'First Pitch Strikes', type: 'number', placeholder: '142' },
+      { name: 'batters_faced', label: 'Batters Faced', type: 'number', placeholder: '198' },
+    ],
+    contextAdjustments: ['Umpire zone', 'Weather', 'Catcher framing'],
+  },
+  {
+    id: 'stuff_plus',
+    name: 'Stuff+ (Pitch Quality)',
+    category: 'tracking-required',
+    formula: 'Model: f(velo, spin, movement, location, count) scaled to 100',
+    description:
+      'Advanced pitching metric combining velocity, spin rate, movement, and location. 100 = league average stuff, higher = better raw pitch quality.',
+    inputs: [
+      { name: 'avg_velo', label: 'Avg Velocity', type: 'number', placeholder: '93.2' },
+      { name: 'avg_spin', label: 'Avg Spin Rate', type: 'number', placeholder: '2245' },
+      { name: 'avg_movement', label: 'Avg Movement (in)', type: 'number', placeholder: '14.8' },
+      { name: 'stuff_model', label: 'Stuff+ Model Output', type: 'number', placeholder: '112' },
+    ],
+    contextAdjustments: ['Pitch arsenal mix', 'Sequencing', 'Platoon effects'],
+  },
 ];
 
 export const gameProvenance: GameProvenance = {
