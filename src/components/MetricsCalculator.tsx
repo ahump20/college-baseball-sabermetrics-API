@@ -73,14 +73,131 @@ export function MetricsCalculator() {
         break;
       }
 
+      case 'iso': {
+        const ab = inputs.ab || 0;
+        const doubles = inputs['2b'] || 0;
+        const triples = inputs['3b'] || 0;
+        const hr = inputs.hr || 0;
+        calculated = (doubles + 2 * triples + 3 * hr) / (ab || 1);
+        break;
+      }
+
+      case 'babip': {
+        const h = inputs.h || 0;
+        const hr = inputs.hr || 0;
+        const ab = inputs.ab || 0;
+        const so = inputs.so || 0;
+        const sf = inputs.sf || 0;
+        calculated = (h - hr) / (ab - so - hr + sf || 1);
+        break;
+      }
+
+      case 'k_pct': {
+        const so = inputs.so || 0;
+        const pa = inputs.pa || 0;
+        calculated = (so / (pa || 1)) * 100;
+        break;
+      }
+
+      case 'bb_pct': {
+        const bb = inputs.bb || 0;
+        const pa = inputs.pa || 0;
+        calculated = (bb / (pa || 1)) * 100;
+        break;
+      }
+
+      case 'ops_plus': {
+        const obp = inputs.obp || 0;
+        const slg = inputs.slg || 0;
+        const lgObp = inputs.lg_obp || 0.365;
+        const lgSlg = inputs.lg_slg || 0.445;
+        const parkFactor = inputs.park_factor || 1.0;
+        calculated = ((obp / lgObp + slg / lgSlg - 1) / parkFactor) * 100;
+        break;
+      }
+
+      case 'xfip': {
+        const ip = inputs.ip || 0;
+        const fb = inputs.fb || 0;
+        const bb = inputs.bb || 0;
+        const hbp = inputs.hbp || 0;
+        const ibb = inputs.ibb || 0;
+        const so = inputs.so || 0;
+        const lgHrFb = inputs.lg_hr_fb || 0.115;
+        const fipConstant = 3.20;
+        calculated = (13 * (fb * lgHrFb) + 3 * (bb + hbp - ibb) - 2 * so) / (ip || 1) + fipConstant;
+        break;
+      }
+
+      case 'whip': {
+        const bb = inputs.bb || 0;
+        const h = inputs.h || 0;
+        const ip = inputs.ip || 0;
+        calculated = (bb + h) / (ip || 1);
+        break;
+      }
+
+      case 'k_bb_ratio': {
+        const so = inputs.so || 0;
+        const bb = inputs.bb || 0;
+        calculated = so / (bb || 1);
+        break;
+      }
+
       case 're24': {
         const reAdded = inputs.re_added || 0;
         calculated = reAdded;
         break;
       }
 
+      case 'wpa': {
+        calculated = inputs.wpa_total || 0;
+        break;
+      }
+
+      case 'leverage_index': {
+        calculated = inputs.avg_li || 0;
+        break;
+      }
+
+      case 'clutch': {
+        const wpa = inputs.wpa || 0;
+        const avgLi = inputs.avg_li || 1;
+        const pwpa = inputs.pwpa || 0;
+        calculated = wpa / avgLi - pwpa;
+        break;
+      }
+
       case 'xwoba': {
         calculated = inputs.xwoba_value || 0;
+        break;
+      }
+
+      case 'hard_hit_pct': {
+        const hardHit = inputs.hard_hit || 0;
+        const bipTotal = inputs.bip_total || 0;
+        calculated = (hardHit / (bipTotal || 1)) * 100;
+        break;
+      }
+
+      case 'barrel_rate': {
+        const barrels = inputs.barrels || 0;
+        const bbe = inputs.bbe || 0;
+        calculated = (barrels / (bbe || 1)) * 100;
+        break;
+      }
+
+      case 'avg_ev': {
+        const totalEv = inputs.total_ev || 0;
+        const bipCount = inputs.bip_count || 0;
+        calculated = totalEv / (bipCount || 1);
+        break;
+      }
+
+      case 'spin_rate': {
+        const totalSpin = inputs.total_spin || 0;
+        const fbCount = inputs.fb_count || 0;
+        calculated = totalSpin / (fbCount || 1);
         break;
       }
     }

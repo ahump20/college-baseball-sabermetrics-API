@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Code, Database, Calculator, GitBranch, ChartBar } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
 import { ProvenanceTracker } from '@/components/ProvenanceTracker';
 import { CoverageDashboard } from '@/components/CoverageDashboard';
+import { LiveAPISimulator } from '@/components/LiveAPISimulator';
+import { InteractiveERD } from '@/components/InteractiveERD';
 
 function App() {
   const [activeTab, setActiveTab] = useState('api');
@@ -32,7 +34,7 @@ function App() {
 
       <main className="container mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-5 lg:w-auto lg:inline-grid">
+          <TabsList className="grid w-full grid-cols-7 lg:w-auto lg:inline-grid">
             <TabsTrigger value="api" className="gap-2">
               <Code size={16} />
               <span className="hidden sm:inline">API</span>
@@ -41,9 +43,17 @@ function App() {
               <Database size={16} />
               <span className="hidden sm:inline">Schema</span>
             </TabsTrigger>
+            <TabsTrigger value="erd" className="gap-2">
+              <Shapes size={16} />
+              <span className="hidden sm:inline">ERD</span>
+            </TabsTrigger>
             <TabsTrigger value="metrics" className="gap-2">
               <Calculator size={16} />
               <span className="hidden sm:inline">Analytics</span>
+            </TabsTrigger>
+            <TabsTrigger value="live" className="gap-2">
+              <Pulse size={16} />
+              <span className="hidden sm:inline">Live API</span>
             </TabsTrigger>
             <TabsTrigger value="provenance" className="gap-2">
               <GitBranch size={16} />
@@ -64,8 +74,16 @@ function App() {
               <SchemaViewer />
             </TabsContent>
 
+            <TabsContent value="erd" className="mt-0">
+              <InteractiveERD />
+            </TabsContent>
+
             <TabsContent value="metrics" className="mt-0">
               <MetricsCalculator />
+            </TabsContent>
+
+            <TabsContent value="live" className="mt-0">
+              <LiveAPISimulator />
             </TabsContent>
 
             <TabsContent value="provenance" className="mt-0">

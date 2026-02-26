@@ -743,6 +743,124 @@ export const metrics: Metric[] = [
     contextAdjustments: ['Park factor', 'League environment', 'Division normalization'],
   },
   {
+    id: 'iso',
+    name: 'ISO (Isolated Power)',
+    category: 'box-only',
+    formula: 'SLG − AVG = (2B + 2×3B + 3×HR) / AB',
+    description:
+      'Measures raw power by isolating extra bases per at-bat. Separates power from batting average.',
+    inputs: [
+      { name: 'ab', label: 'At Bats', type: 'number', placeholder: '154' },
+      { name: '2b', label: 'Doubles', type: 'number', placeholder: '18' },
+      { name: '3b', label: 'Triples', type: 'number', placeholder: '2' },
+      { name: 'hr', label: 'Home Runs', type: 'number', placeholder: '12' },
+    ],
+    contextAdjustments: ['Park factor', 'Division power environment'],
+  },
+  {
+    id: 'babip',
+    name: 'BABIP (Batting Average on Balls in Play)',
+    category: 'box-only',
+    formula: '(H − HR) / (AB − K − HR + SF)',
+    description:
+      'Measures batting average on balls put in play, excluding home runs and strikeouts. Used for luck/skill analysis.',
+    inputs: [
+      { name: 'h', label: 'Hits', type: 'number', placeholder: '74' },
+      { name: 'hr', label: 'Home Runs', type: 'number', placeholder: '12' },
+      { name: 'ab', label: 'At Bats', type: 'number', placeholder: '154' },
+      { name: 'so', label: 'Strikeouts', type: 'number', placeholder: '38' },
+      { name: 'sf', label: 'Sacrifice Flies', type: 'number', placeholder: '4' },
+    ],
+    contextAdjustments: ['Batted ball profile', 'Defense quality'],
+  },
+  {
+    id: 'k_pct',
+    name: 'K% (Strikeout Rate)',
+    category: 'box-only',
+    formula: 'K / PA × 100',
+    description:
+      'Percentage of plate appearances resulting in strikeouts. Key plate discipline indicator.',
+    inputs: [
+      { name: 'so', label: 'Strikeouts', type: 'number', placeholder: '38' },
+      { name: 'pa', label: 'Plate Appearances', type: 'number', placeholder: '185' },
+    ],
+    contextAdjustments: ['League average', 'Batter handedness'],
+  },
+  {
+    id: 'bb_pct',
+    name: 'BB% (Walk Rate)',
+    category: 'box-only',
+    formula: 'BB / PA × 100',
+    description:
+      'Percentage of plate appearances resulting in walks. Measures plate discipline and patience.',
+    inputs: [
+      { name: 'bb', label: 'Walks', type: 'number', placeholder: '28' },
+      { name: 'pa', label: 'Plate Appearances', type: 'number', placeholder: '185' },
+    ],
+    contextAdjustments: ['League average', 'Umpire tendencies'],
+  },
+  {
+    id: 'ops_plus',
+    name: 'OPS+ (Adjusted OPS)',
+    category: 'box-only',
+    formula: '(OBP / lgOBP + SLG / lgSLG − 1) × 100',
+    description:
+      'Park and league-adjusted OPS scaled to 100. Values above 100 are above average.',
+    inputs: [
+      { name: 'obp', label: 'On-Base %', type: 'number', placeholder: '0.412' },
+      { name: 'slg', label: 'Slugging %', type: 'number', placeholder: '0.558' },
+      { name: 'lg_obp', label: 'League OBP', type: 'number', placeholder: '0.365' },
+      { name: 'lg_slg', label: 'League SLG', type: 'number', placeholder: '0.445' },
+      { name: 'park_factor', label: 'Park Factor', type: 'number', placeholder: '1.03' },
+    ],
+    contextAdjustments: ['Park factor', 'League environment'],
+  },
+  {
+    id: 'xfip',
+    name: 'xFIP (Expected FIP)',
+    category: 'box-only',
+    formula: '((13×(FB×lgHR/FB)) + (3×(BB + HBP − IBB)) − (2×K)) / IP + FIP_constant',
+    description:
+      'FIP variant using league-average HR/FB rate instead of actual home runs. Normalizes for HR luck.',
+    inputs: [
+      { name: 'ip', label: 'Innings Pitched', type: 'number', placeholder: '89.1' },
+      { name: 'fb', label: 'Fly Balls', type: 'number', placeholder: '156' },
+      { name: 'bb', label: 'Walks', type: 'number', placeholder: '22' },
+      { name: 'hbp', label: 'Hit by Pitch', type: 'number', placeholder: '4' },
+      { name: 'ibb', label: 'Intentional Walks', type: 'number', placeholder: '1' },
+      { name: 'so', label: 'Strikeouts', type: 'number', placeholder: '98' },
+      { name: 'lg_hr_fb', label: 'League HR/FB', type: 'number', placeholder: '0.115' },
+    ],
+    contextAdjustments: ['Division constant', 'Fly ball park factors'],
+  },
+  {
+    id: 'whip',
+    name: 'WHIP (Walks + Hits per Inning)',
+    category: 'box-only',
+    formula: '(BB + H) / IP',
+    description:
+      'Traditional pitching metric measuring baserunners allowed per inning pitched.',
+    inputs: [
+      { name: 'bb', label: 'Walks', type: 'number', placeholder: '22' },
+      { name: 'h', label: 'Hits Allowed', type: 'number', placeholder: '78' },
+      { name: 'ip', label: 'Innings Pitched', type: 'number', placeholder: '89.1' },
+    ],
+    contextAdjustments: ['League BABIP', 'Defense quality'],
+  },
+  {
+    id: 'k_bb_ratio',
+    name: 'K/BB (Strikeout-to-Walk Ratio)',
+    category: 'box-only',
+    formula: 'K / BB',
+    description:
+      'Ratio of strikeouts to walks. Measures pitcher command and control.',
+    inputs: [
+      { name: 'so', label: 'Strikeouts', type: 'number', placeholder: '98' },
+      { name: 'bb', label: 'Walks', type: 'number', placeholder: '22' },
+    ],
+    contextAdjustments: ['League average', 'Pitcher type'],
+  },
+  {
     id: 're24',
     name: 'RE24 (Run Expectancy 24 Base-Out States)',
     category: 'pbp-required',
@@ -761,6 +879,59 @@ export const metrics: Metric[] = [
       },
     ],
     contextAdjustments: ['League run environment', 'Leverage index weighting'],
+  },
+  {
+    id: 'wpa',
+    name: 'WPA (Win Probability Added)',
+    category: 'pbp-required',
+    formula: 'Σ(WP_after − WP_before)',
+    description:
+      'Cumulative change in win probability attributed to a player. Context-aware situational metric.',
+    inputs: [
+      { name: 'events', label: 'Number of Events', type: 'number', placeholder: '245' },
+      {
+        name: 'wpa_total',
+        label: 'Total WPA',
+        type: 'number',
+        placeholder: '2.8',
+        min: -10,
+        max: 10,
+      },
+    ],
+    contextAdjustments: ['Game state', 'Leverage situations'],
+  },
+  {
+    id: 'leverage_index',
+    name: 'LI (Leverage Index)',
+    category: 'pbp-required',
+    formula: 'Swing in WP / Average Swing',
+    description:
+      'Measures the importance of a game situation. 1.0 = average leverage, higher = more critical.',
+    inputs: [
+      {
+        name: 'avg_li',
+        label: 'Average LI',
+        type: 'number',
+        placeholder: '1.24',
+        min: 0,
+        max: 10,
+      },
+    ],
+    contextAdjustments: ['Inning', 'Score differential', 'Base-out state'],
+  },
+  {
+    id: 'clutch',
+    name: 'Clutch (Context-Neutral Performance)',
+    category: 'pbp-required',
+    formula: 'WPA / LI − pWPA',
+    description:
+      'Measures performance in high-leverage situations above expected. Positive = clutch performer.',
+    inputs: [
+      { name: 'wpa', label: 'WPA', type: 'number', placeholder: '2.8' },
+      { name: 'avg_li', label: 'Avg Leverage', type: 'number', placeholder: '1.24' },
+      { name: 'pwpa', label: 'Predicted WPA', type: 'number', placeholder: '2.2' },
+    ],
+    contextAdjustments: ['Sample size', 'Context weighting'],
   },
   {
     id: 'xwoba',
@@ -788,6 +959,58 @@ export const metrics: Metric[] = [
       'Weather conditions',
       'Tracking coverage',
     ],
+  },
+  {
+    id: 'hard_hit_pct',
+    name: 'Hard Hit% (Exit Velocity > 95mph)',
+    category: 'tracking-required',
+    formula: 'BIP with EV ≥ 95mph / Total BIP × 100',
+    description:
+      'Percentage of balls in play with exit velocity of 95+ mph. Indicates quality of contact.',
+    inputs: [
+      { name: 'hard_hit', label: 'Hard Hit Balls', type: 'number', placeholder: '42' },
+      { name: 'bip_total', label: 'Total Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Park dimensions', 'Weather', 'Ball type'],
+  },
+  {
+    id: 'barrel_rate',
+    name: 'Barrel% (Optimal Launch Angle + EV)',
+    category: 'tracking-required',
+    formula: 'Barrels / Batted Ball Events × 100',
+    description:
+      'Percentage of batted balls meeting optimal EV/LA combination (high hit probability). Elite power indicator.',
+    inputs: [
+      { name: 'barrels', label: 'Barrels', type: 'number', placeholder: '18' },
+      { name: 'bbe', label: 'Batted Ball Events', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Park factors', 'Sample size threshold'],
+  },
+  {
+    id: 'avg_ev',
+    name: 'Avg Exit Velocity',
+    category: 'tracking-required',
+    formula: 'Σ(exit_velocity) / BIP_count',
+    description:
+      'Average exit velocity on batted balls. Strong predictor of power and overall offensive production.',
+    inputs: [
+      { name: 'total_ev', label: 'Total EV (sum)', type: 'number', placeholder: '11315.2' },
+      { name: 'bip_count', label: 'Balls in Play', type: 'number', placeholder: '128' },
+    ],
+    contextAdjustments: ['Weather', 'Ball compression', 'Tracking calibration'],
+  },
+  {
+    id: 'spin_rate',
+    name: 'Avg Spin Rate (Fastball)',
+    category: 'tracking-required',
+    formula: 'Σ(spin_rpm) / pitch_count',
+    description:
+      'Average fastball spin rate in RPM. Higher spin typically correlates with swing-and-miss ability.',
+    inputs: [
+      { name: 'total_spin', label: 'Total Spin (sum)', type: 'number', placeholder: '689400' },
+      { name: 'fb_count', label: 'Fastball Count', type: 'number', placeholder: '312' },
+    ],
+    contextAdjustments: ['Pitch type', 'Release point', 'Velocity'],
   },
 ];
 
