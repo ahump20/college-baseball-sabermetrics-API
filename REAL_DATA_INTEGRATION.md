@@ -4,7 +4,7 @@ This document describes the real data fetching integration for the College Baseb
 
 ## Overview
 
-The platform now supports fetching **real player and team data** from the ESPN Public API instead of relying solely on mock/synthetic data. This enables you to work with actual NCAA baseball rosters, teams, and games.
+The platform now supports fetching **real game data, box scores, player stats, and team data** from the ESPN Public API instead of relying solely on mock/synthetic data. This enables you to work with actual NCAA baseball games, rosters, teams, and live statistics.
 
 ## Features
 
@@ -17,6 +17,15 @@ A fully typed TypeScript client for accessing ESPN's college baseball data:
 - **Game Details**: Retrieve box scores and play-by-play data
 - **Standings & Rankings**: Access conference standings and rankings
 - **Smart Caching**: Built-in 5-minute cache to reduce API calls
+
+### ESPN Game Data Service (`src/lib/espnGameData.ts`)
+Advanced service for fetching and transforming real game data:
+
+- **Game Schedules**: Fetch today's games or games from the last N days
+- **Box Scores**: Complete box score data including line scores, team stats, and player stats
+- **Player Statistics**: Batting and pitching stats for all players in a game
+- **Play-by-Play**: Detailed play-by-play events with inning, outs, and scoring plays
+- **Intelligent Caching**: 2-minute cache for game data to balance freshness and performance
 
 ### Real Data Service (`src/lib/realDataService.ts`)
 Transforms ESPN data into the internal Player data model:
@@ -36,7 +45,36 @@ Now includes a data source toggle:
 - **Loading States**: Shows progress while fetching real data
 - **Toast Notifications**: Provides feedback on data loading success/failure
 
+### Game Scoreboard Component (`src/components/GameScoreboard.tsx`)
+NEW! Complete game data viewer with real ESPN box scores:
+
+- **Live Game List**: Browse recent NCAA baseball games (today, last 3/7/14 days)
+- **Game Status**: See which games are live, final, or scheduled
+- **Full Box Scores**: View complete box scores including:
+  - Line score by inning (runs, hits, errors)
+  - Player batting stats (AB, R, H, RBI, BB, SO, AVG)
+  - Player pitching stats (IP, H, R, ER, BB, SO, ERA)
+- **Game Details**: Venue, attendance, and game notes
+- **Auto-Load**: Automatically selects and displays the first completed game
+- **Refresh**: Manual refresh to get the latest games
+
 ## Usage
+
+### In the Games Tab (NEW!)
+
+1. Navigate to the **Games** tab (first tab, default view)
+2. The system will automatically:
+   - Fetch recent NCAA baseball games from ESPN
+   - Display games from the last 3 days by default
+   - Auto-select the first completed game and show its box score
+3. Use the controls:
+   - **Time Range Selector**: Choose Today, Last 3/7/14 days
+   - **Refresh Button**: Reload the latest games
+   - **Game List**: Click any game to view its box score
+4. View detailed box scores:
+   - **Line Score**: Runs by inning for both teams
+   - **Batting Tab**: All batters with plate appearance stats
+   - **Pitching Tab**: All pitchers with pitching line stats
 
 ### In the Player Comparison Tab
 
@@ -54,6 +92,7 @@ Now includes a data source toggle:
 ```typescript
 import { realDataService } from '@/lib/realDataService';
 import { espnAPI } from '@/lib/espnAPI';
+import { espnGameData } from '@/lib/espnGameData';
 
 // Fetch real players
 const players = await realDataService.getRealPlayers();
@@ -72,6 +111,16 @@ console.log(`${cacheInfo.playerCount} players from ${cacheInfo.teamCount} teams`
 const teamsResponse = await espnAPI.getTeams();
 const scoreboard = await espnAPI.getScoreboard();
 const roster = await espnAPI.getTeamRoster('teamId');
+
+// NEW: Game data service usage
+const todaysGames = await espnGameData.getTodaysGames();
+const recentGames = await espnGameData.getRecentGames(7); // last 7 days
+const boxScore = await espnGameData.getGameBoxScore('gameId');
+const playByPlay = await espnGameData.getPlayByPlay('gameId');
+
+// Check game data cache
+const gamesCacheStats = espnGameData.getCacheStats();
+console.log(`${gamesCacheStats.boxScores} box scores, ${gamesCacheStats.playByPlay} PBP cached`);
 ```
 
 ## Data Flow
@@ -81,11 +130,16 @@ ESPN API
    ↓
 ESPN API Client (caching layer)
    ↓
-Real Data Service (transformation)
-   ↓
-Player Data Model
-   ↓
-UI Components
+┌─────────────────────┬──────────────────────────┐
+│                     │                          │
+Real Data Service     ESPN Game Data Service     │
+(player transformation) (game transformation)    │
+│                     │                          │
+└─────────────────────┴──────────────────────────┘
+   ↓                     ↓
+Player Data Model    Box Score / PBP Models
+   ↓                     ↓
+UI Components (Players, Comparison, Games, etc.)
 ```
 
 ## API Endpoints Used
@@ -95,9 +149,16 @@ The integration uses ESPN's public college baseball API endpoints:
 - `GET /sports/baseball/college-baseball/teams` - Team directory
 - `GET /sports/baseball/college-baseball/teams/{id}/roster` - Team rosters
 - `GET /sports/baseball/college-baseball/scoreboard` - Games/schedule
-- `GET /sports/baseball/college-baseball/summary?event={id}` - Game details
+- `GET /sports/baseball/college-baseball/summary?event={id}` - **Game details, box scores, and play-by-play**
 - `GET /sports/baseball/college-baseball/standings` - Standings
 - `GET /sports/baseball/college-baseball/rankings` - Rankings
+
+**Note**: The `/summary` endpoint is the primary source for real box score data, providing:
+- Complete line scores (runs by inning)
+- Team statistics (hits, errors, runs)
+- Player batting statistics (AB, R, H, RBI, BB, SO, AVG)
+- Player pitching statistics (IP, H, R, ER, BB, SO, ERA, pitch counts)
+- Game metadata (venue, attendance, status, notes)
 
 ## Notes & Limitations
 
@@ -108,12 +169,15 @@ The integration uses ESPN's public college baseball API endpoints:
 - Includes both basic stats and advanced sabermetrics
 
 ### Future Enhancements
+- ✅ **COMPLETED**: Real box score data from ESPN
+- ✅ **COMPLETED**: Actual batting and pitching statistics
+- ✅ **COMPLETED**: Game scoreboard with live/final status
 - Integration with additional data sources (NCAA.org, Sportradar, etc.)
-- Historical season data loading
-- Real-time game updates
-- Full play-by-play data integration
-- Actual statistics instead of generated ones (when available)
-- Persistent storage of fetched data
+- Historical season data loading (multiple seasons)
+- Real-time game updates (live score refresh)
+- Enhanced play-by-play visualization
+- Win probability graphs
+- Persistent storage of fetched data (save to database)
 
 ## Configuration
 
