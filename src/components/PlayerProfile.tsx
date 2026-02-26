@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   Table,
   TableBody,
@@ -37,6 +38,10 @@ import {
   MagnifyingGlass,
   ArrowLeft,
   CloudArrowDown,
+  MapPin,
+  GraduationCap,
+  Ruler,
+  Barbell,
 } from '@phosphor-icons/react';
 import { mockPlayers, type Player } from '@/lib/playerData';
 import { realDataService } from '@/lib/realDataService';
@@ -406,12 +411,20 @@ export function PlayerProfile() {
                         onClick={() => setSelectedPlayer(player)}
                       >
                         <CardContent className="p-4">
-                          <div className="space-y-2">
-                            <div>
-                              <h3 className="font-semibold text-base">{player.name}</h3>
-                              <p className="text-xs text-muted-foreground">
-                                {player.team} • {player.conference}
-                              </p>
+                          <div className="space-y-3">
+                            <div className="flex items-start gap-3">
+                              <Avatar className="h-12 w-12 border-2 border-primary/20">
+                                <AvatarImage src={player.photo} alt={player.name} />
+                                <AvatarFallback className="bg-primary/10 text-primary font-semibold">
+                                  {player.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <h3 className="font-semibold text-base truncate">{player.name}</h3>
+                                <p className="text-xs text-muted-foreground truncate">
+                                  {player.team} • {player.conference}
+                                </p>
+                              </div>
                             </div>
                             <div className="flex items-center gap-2 flex-wrap">
                               <Badge variant="outline" className="text-xs">
@@ -495,6 +508,15 @@ export function PlayerProfile() {
       <Card className="border-2 border-primary/20">
         <CardContent className="p-6">
           <div className="flex flex-col md:flex-row gap-6">
+            <div className="flex-shrink-0">
+              <Avatar className="h-32 w-32 border-4 border-primary/20">
+                <AvatarImage src={selectedPlayer.photo} alt={selectedPlayer.name} />
+                <AvatarFallback className="bg-primary/10 text-primary font-bold text-3xl">
+                  {selectedPlayer.name.split(' ').map(n => n[0]).join('').slice(0, 2)}
+                </AvatarFallback>
+              </Avatar>
+            </div>
+            
             <div className="flex-1">
               <div className="flex items-start justify-between gap-4 mb-4">
                 <div>
@@ -529,6 +551,56 @@ export function PlayerProfile() {
                   </div>
                 </div>
               </div>
+
+              {selectedPlayer.bio && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 p-3 bg-muted/30 rounded-lg border border-border/50">
+                  {selectedPlayer.bio.height && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Ruler size={16} className="text-primary" />
+                      <div>
+                        <span className="text-muted-foreground">Height:</span>{' '}
+                        <span className="font-semibold">{selectedPlayer.bio.height}</span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedPlayer.bio.weight && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <Barbell size={16} className="text-primary" />
+                      <div>
+                        <span className="text-muted-foreground">Weight:</span>{' '}
+                        <span className="font-semibold">{selectedPlayer.bio.weight} lbs</span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedPlayer.bio.hometown && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <MapPin size={16} className="text-primary" />
+                      <div>
+                        <span className="text-muted-foreground">From:</span>{' '}
+                        <span className="font-semibold">{selectedPlayer.bio.hometown}</span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedPlayer.bio.highSchool && (
+                    <div className="flex items-center gap-2 text-sm col-span-2">
+                      <GraduationCap size={16} className="text-primary" />
+                      <div>
+                        <span className="text-muted-foreground">High School:</span>{' '}
+                        <span className="font-semibold">{selectedPlayer.bio.highSchool}</span>
+                      </div>
+                    </div>
+                  )}
+                  {selectedPlayer.bio.major && (
+                    <div className="flex items-center gap-2 text-sm">
+                      <GraduationCap size={16} className="text-primary" />
+                      <div>
+                        <span className="text-muted-foreground">Major:</span>{' '}
+                        <span className="font-semibold">{selectedPlayer.bio.major}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <Separator className="my-4" />
 
