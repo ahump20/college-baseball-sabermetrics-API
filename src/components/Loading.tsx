@@ -1,6 +1,7 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import { useEffect, useState } from 'react';
 import { FlameLoader } from './FlameLoader';
+import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
 
 interface PageLoadingProps {
   isLoading: boolean;
@@ -19,10 +20,11 @@ export function PageLoading({ isLoading, message = 'Loading...' }: PageLoadingPr
     setProgress(0);
     const interval = setInterval(() => {
       setProgress((prev) => {
-        if (prev >= 90) return prev;
-        return prev + Math.random() * 10;
+        if (prev >= 95) return prev;
+        const increment = Math.random() * 15;
+        return Math.min(prev + increment, 95);
       });
-    }, 300);
+    }, 200);
 
     return () => clearInterval(interval);
   }, [isLoading]);
@@ -31,36 +33,98 @@ export function PageLoading({ isLoading, message = 'Loading...' }: PageLoadingPr
     <AnimatePresence>
       {isLoading && (
         <motion.div
-          initial={{ opacity: 0 }}
+          initial={{ opacity: 1 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-sm"
+          transition={{ duration: 0.6, ease: 'easeInOut' }}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-gradient-to-br from-background via-card to-background"
         >
-          <div className="flex flex-col items-center gap-6">
-            <FlameLoader size="lg" />
-            
-            <div className="flex flex-col items-center gap-3">
-              <motion.p
-                className="text-lg font-medium text-foreground"
-                animate={{ opacity: [0.5, 1, 0.5] }}
-                transition={{ duration: 1.5, repeat: Infinity }}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary/5 via-transparent to-transparent" />
+          
+          <div className="relative flex flex-col items-center gap-8 sm:gap-12 px-4">
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ duration: 0.5, ease: 'easeOut' }}
+              className="relative"
+            >
+              <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full" />
+              <motion.img
+                src={blazeLogo}
+                alt="Blaze Sports Intel"
+                className="relative w-24 h-24 sm:w-32 sm:h-32 lg:w-40 lg:h-40 object-contain"
+                animate={{ 
+                  filter: [
+                    'drop-shadow(0 0 20px rgba(255,107,53,0.3))',
+                    'drop-shadow(0 0 40px rgba(255,107,53,0.6))',
+                    'drop-shadow(0 0 20px rgba(255,107,53,0.3))',
+                  ]
+                }}
+                transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+              />
+            </motion.div>
+
+            <div className="flex flex-col items-center gap-4 sm:gap-6">
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.2, duration: 0.5 }}
+                className="text-center"
               >
-                {message}
-              </motion.p>
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold tracking-tight text-foreground mb-2">
+                  BLAZE SPORTS INTEL
+                </h1>
+                <p className="text-xs sm:text-sm font-mono text-muted-foreground tracking-wider">
+                  Production-Grade NCAA Analytics Platform
+                </p>
+              </motion.div>
 
-              <div className="w-64 h-1 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full bg-gradient-to-r from-primary via-accent to-secondary rounded-full"
-                  initial={{ width: '0%' }}
-                  animate={{ width: `${progress}%` }}
-                  transition={{ duration: 0.3 }}
-                />
-              </div>
+              <motion.div
+                initial={{ y: 20, opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                transition={{ delay: 0.4, duration: 0.5 }}
+                className="flex flex-col items-center gap-4 w-full max-w-sm"
+              >
+                <div className="relative w-full">
+                  <FlameLoader size="md" className="mx-auto" />
+                </div>
 
-              <p className="text-xs font-mono text-muted-foreground">
-                {Math.round(progress)}%
-              </p>
+                <motion.p
+                  className="text-sm sm:text-base font-medium text-foreground/80"
+                  animate={{ opacity: [0.5, 1, 0.5] }}
+                  transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                >
+                  {message}
+                </motion.p>
+
+                <div className="w-full h-1.5 bg-muted/30 rounded-full overflow-hidden backdrop-blur-sm">
+                  <motion.div
+                    className="h-full rounded-full"
+                    style={{
+                      background: 'linear-gradient(90deg, #ff4500 0%, #ff8c00 50%, #ffd700 100%)',
+                    }}
+                    initial={{ width: '0%' }}
+                    animate={{ width: `${progress}%` }}
+                    transition={{ duration: 0.3, ease: 'easeOut' }}
+                  />
+                </div>
+
+                <p className="text-xs font-mono text-muted-foreground tabular-nums">
+                  {Math.round(progress)}%
+                </p>
+              </motion.div>
             </div>
+
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.6, duration: 0.5 }}
+              className="absolute bottom-8 text-center"
+            >
+              <p className="text-[0.6875rem] sm:text-xs font-mono text-muted-foreground tracking-wider">
+                COURAGE · GRIT · LEADERSHIP
+              </p>
+            </motion.div>
           </div>
         </motion.div>
       )}

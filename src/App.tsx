@@ -36,7 +36,7 @@ interface TabConfig {
 
 function App() {
   const [activeTab, setActiveTab] = useState('games');
-  const [isInitialLoading] = usePageLoading(true, 1200);
+  const [isInitialLoading] = usePageLoading(true, 2400);
   const isMobile = useIsMobile();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -56,6 +56,10 @@ function App() {
     { value: 'coverage', label: 'Coverage', icon: ChartBar, component: <CoverageDashboard /> },
     { value: 'texas', label: 'Texas Stats', icon: FileText, component: <TexasLonghornsData /> },
   ];
+
+  if (isInitialLoading) {
+    return <PageLoading isLoading={isInitialLoading} message="Initializing Blaze Sports Intel..." />;
+  }
 
   return (
     <div className="min-h-screen bg-background flex flex-col relative">
