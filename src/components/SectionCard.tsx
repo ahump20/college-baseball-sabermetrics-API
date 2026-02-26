@@ -12,18 +12,22 @@ interface SectionCardProps {
 export function SectionCard({ title, description, children, actions, className = '' }: SectionCardProps) {
   return (
     <Card className={className}>
-      <CardHeader className="pb-6">
-        <div className="flex items-start justify-between gap-4">
-          <div className="space-y-1 flex-1">
-            <CardTitle className="text-[1.25rem] font-semibold leading-tight">{title}</CardTitle>
+      <CardHeader className="p-6 pb-4 border-b border-border">
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 min-w-0">
+            <CardTitle className="text-[1.5rem] font-semibold leading-tight tracking-[-0.01em] mb-2">
+              {title}
+            </CardTitle>
             {description && (
-              <CardDescription className="text-[0.875rem] leading-relaxed">{description}</CardDescription>
+              <CardDescription className="text-[0.875rem] leading-[1.5] text-muted-foreground">
+                {description}
+              </CardDescription>
             )}
           </div>
           {actions && <div className="flex items-center gap-2 shrink-0">{actions}</div>}
         </div>
       </CardHeader>
-      <CardContent>{children}</CardContent>
+      <CardContent className="p-6">{children}</CardContent>
     </Card>
   );
 }
