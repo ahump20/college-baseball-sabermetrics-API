@@ -21,16 +21,20 @@ import {
   MapPin,
   Ruler,
   GraduationCap,
+  Image as ImageIcon,
 } from '@phosphor-icons/react';
 import { texasPdfScraper, type TexasTeamStats, type TexasPlayerStats } from '@/lib/texasPdfScraper';
+import { getPlayerPhoto, getTeamLogo } from '@/lib/photoService';
 import { toast } from 'sonner';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 export function TexasLonghornsData() {
   const [teamData, setTeamData] = useState<TexasTeamStats | null>(null);
   const [loading, setLoading] = useState(false);
   const [selectedPlayer, setSelectedPlayer] = useState<TexasPlayerStats | null>(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const texasLogo = getTeamLogo('Texas');
 
   useEffect(() => {
     loadMockData();
@@ -111,8 +115,20 @@ export function TexasLonghornsData() {
         <CardHeader>
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center">
-                <Baseball size={32} weight="bold" className="text-primary" />
+              <div className="w-16 h-16 rounded-xl bg-primary/20 flex items-center justify-center overflow-hidden">
+                <img 
+                  src={texasLogo.primary} 
+                  alt={texasLogo.name}
+                  className="w-full h-full object-contain p-2"
+                  onError={(e) => {
+                    const target = e.target as HTMLImageElement;
+                    target.style.display = 'none';
+                    const parent = target.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<svg class="w-8 h-8 text-primary" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2L2 7v10c0 5.55 3.84 10.74 9 12 5.16-1.26 9-6.45 9-12V7l-10-5z"/></svg>`;
+                    }
+                  }}
+                />
               </div>
               <div>
                 <CardTitle className="text-2xl flex items-center gap-3">
@@ -431,50 +447,62 @@ export function TexasLonghornsData() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {battingPlayers.slice(0, 5).map((player) => (
-                  <div key={player.playerId} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                    <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
-                      <User size={20} weight="bold" className="text-primary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">{player.name}</span>
-                        <Badge variant="outline" className="text-xs">{player.position}</Badge>
-                        {player.year && <span className="text-xs text-muted-foreground">{player.year}</span>}
-                      </div>
-                      {player.batting && (
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="font-mono">.{(player.batting.avg * 1000).toFixed(0)} AVG</span>
-                          <span className="font-mono">.{(player.batting.ops * 1000).toFixed(0)} OPS</span>
-                          <span>{player.batting.hr} HR</span>
-                          <span>{player.batting.rbi} RBI</span>
+                {battingPlayers.slice(0, 5).map((player) => {
+                  const playerPhoto = getPlayerPhoto(player.playerId, player.name, 'Texas');
+                  return (
+                    <div key={player.playerId} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedPlayer(player)}>
+                      <Avatar className="w-12 h-12 shrink-0 border-2 border-primary/20">
+                        <AvatarImage src={player.headshotUrl || playerPhoto.headshot} alt={player.name} />
+                        <AvatarFallback className="bg-primary/20 text-primary font-bold">
+                          {player.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">{player.name}</span>
+                          <Badge variant="outline" className="text-xs">{player.position}</Badge>
+                          {player.year && <span className="text-xs text-muted-foreground">{player.year}</span>}
                         </div>
-                      )}
-                    </div>
-                  </div>
-                ))}
-                {pitchingPlayers.slice(0, 3).map((player) => (
-                  <div key={player.playerId} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30">
-                    <div className="w-10 h-10 rounded-full bg-secondary/20 flex items-center justify-center shrink-0">
-                      <Baseball size={20} weight="bold" className="text-secondary" />
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="font-semibold">{player.name}</span>
-                        <Badge variant="outline" className="text-xs">{player.position}</Badge>
-                        {player.year && <span className="text-xs text-muted-foreground">{player.year}</span>}
+                        {player.batting && (
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="font-mono">.{(player.batting.avg * 1000).toFixed(0)} AVG</span>
+                            <span className="font-mono">.{(player.batting.ops * 1000).toFixed(0)} OPS</span>
+                            <span>{player.batting.hr} HR</span>
+                            <span>{player.batting.rbi} RBI</span>
+                          </div>
+                        )}
                       </div>
-                      {player.pitching && (
-                        <div className="flex items-center gap-4 text-sm">
-                          <span className="font-mono">{player.pitching.era.toFixed(2)} ERA</span>
-                          <span className="font-mono">{player.pitching.whip.toFixed(2)} WHIP</span>
-                          <span>{player.pitching.w}-{player.pitching.l}</span>
-                          <span>{player.pitching.so} K</span>
-                        </div>
-                      )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+                {pitchingPlayers.slice(0, 3).map((player) => {
+                  const playerPhoto = getPlayerPhoto(player.playerId, player.name, 'Texas');
+                  return (
+                    <div key={player.playerId} className="flex items-start gap-3 p-3 rounded-lg bg-muted/30 cursor-pointer hover:bg-muted/50 transition-colors" onClick={() => setSelectedPlayer(player)}>
+                      <Avatar className="w-12 h-12 shrink-0 border-2 border-secondary/20">
+                        <AvatarImage src={player.headshotUrl || playerPhoto.headshot} alt={player.name} />
+                        <AvatarFallback className="bg-secondary/20 text-secondary font-bold">
+                          {player.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="font-semibold">{player.name}</span>
+                          <Badge variant="outline" className="text-xs">{player.position}</Badge>
+                          {player.year && <span className="text-xs text-muted-foreground">{player.year}</span>}
+                        </div>
+                        {player.pitching && (
+                          <div className="flex items-center gap-4 text-sm">
+                            <span className="font-mono">{player.pitching.era.toFixed(2)} ERA</span>
+                            <span className="font-mono">{player.pitching.whip.toFixed(2)} WHIP</span>
+                            <span>{player.pitching.w}-{player.pitching.l}</span>
+                            <span>{player.pitching.so} K</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -696,39 +724,44 @@ export function TexasLonghornsData() {
         </TabsContent>
       </Tabs>
 
-      {selectedPlayer && (
-        <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
-          <CardHeader>
-            <div className="flex items-start justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <User size={24} weight="bold" className="text-primary" />
+      {selectedPlayer && (() => {
+        const playerPhoto = getPlayerPhoto(selectedPlayer.playerId, selectedPlayer.name, 'Texas');
+        return (
+          <Card className="border-primary/30 bg-gradient-to-br from-card to-primary/5">
+            <CardHeader>
+              <div className="flex items-start justify-between">
+                <div className="flex items-center gap-4">
+                  <Avatar className="w-20 h-20 border-4 border-primary/20 shrink-0">
+                    <AvatarImage src={selectedPlayer.headshotUrl || playerPhoto.headshot} alt={selectedPlayer.name} />
+                    <AvatarFallback className="bg-primary/20 text-primary font-bold text-xl">
+                      {selectedPlayer.name.split(' ').map(n => n[0]).join('').substring(0, 2)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div>
+                    <CardTitle className="flex items-center gap-2">
+                      {selectedPlayer.jerseyNumber && (
+                        <Badge variant="outline" className="font-mono">
+                          #{selectedPlayer.jerseyNumber}
+                        </Badge>
+                      )}
+                      {selectedPlayer.name}
+                    </CardTitle>
+                    <CardDescription className="mt-1 flex items-center gap-3">
+                      <span className="font-semibold">{selectedPlayer.position}</span>
+                      <span>•</span>
+                      <span>{selectedPlayer.year}</span>
+                    </CardDescription>
+                  </div>
                 </div>
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    {selectedPlayer.jerseyNumber && (
-                      <Badge variant="outline" className="font-mono">
-                        #{selectedPlayer.jerseyNumber}
-                      </Badge>
-                    )}
-                    {selectedPlayer.name}
-                  </CardTitle>
-                  <CardDescription className="mt-1 flex items-center gap-3">
-                    <span className="font-semibold">{selectedPlayer.position}</span>
-                    <span>•</span>
-                    <span>{selectedPlayer.year}</span>
-                  </CardDescription>
-                </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedPlayer(null)}
+                >
+                  Close
+                </Button>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setSelectedPlayer(null)}
-              >
-                Close
-              </Button>
-            </div>
-          </CardHeader>
+            </CardHeader>
           <CardContent>
             {selectedPlayer.bio && (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -827,7 +860,8 @@ export function TexasLonghornsData() {
             </div>
           </CardContent>
         </Card>
-      )}
+        );
+      })()}
     </div>
   );
 }

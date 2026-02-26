@@ -4,6 +4,8 @@ export interface TexasPlayerStats {
   position: string;
   year: string;
   jerseyNumber?: string;
+  photoUrl?: string;
+  headshotUrl?: string;
   batting?: {
     gp: number;
     ab: number;
