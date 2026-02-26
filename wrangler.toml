@@ -30,6 +30,6 @@ routes = [
 hostname = "sabermetrics.blazesportsintel.com"
 
 # Cron triggers for automated data scraping
-# Run daily at 6 AM UTC to refresh Texas stats
+# Run every 6 hours to refresh team stats (at 00:00, 06:00, 12:00, 18:00 UTC)
 [triggers]
-crons = ["0 6 * * *"]
+crons = ["0 */6 * * *"]
