@@ -1,25 +1,56 @@
-# College Baseball Sabermetrics API - MCP Server
+# College Baseball Sabermetrics API - MCP Server Quick Start
 
-## Quick Start: Your MCP Server URL
+## 🚀 Your MCP Server URL (After Deployment)
 
-**For immediate use with Claude.ai:**
-
-Since this is a browser-based Spark application, you have two options for creating an MCP server:
-
-### Option 1: Use the Mock API Endpoint (Simplest - No deployment needed)
-
-The current Spark app is already running and accessible. You can create a simple proxy that wraps the existing functionality:
-
-**Your MCP Server URL:**
 ```
-https://your-spark-subdomain.spark.github.dev/api/mcp
+https://college-baseball-mcp.<YOUR-SUBDOMAIN>.workers.dev/mcp
 ```
 
-However, this requires adding an MCP endpoint to your Spark app. See implementation below.
+**Use this URL in Claude.ai:** Settings → Connectors → Add custom connector
 
-### Option 2: Deploy a Standalone MCP Server (Recommended)
+---
 
-Since Spark apps are browser-based and don't support the Node.js MCP SDK, the best approach is to deploy a standalone MCP server that calls the same ESPN APIs.
+## ⚡ Three Steps to Deploy
+
+### 1️⃣ Test Locally
+
+```bash
+cd /workspaces/spark-template/src/mcp
+wrangler dev standalone-worker.ts
+
+# In another terminal
+curl http://localhost:8787/health
+curl -X POST http://localhost:8787/mcp \
+  -H "Content-Type: application/json" \
+  -d '{"jsonrpc":"2.0","id":1,"method":"initialize","params":{}}'
+```
+
+### 2️⃣ Deploy to Cloudflare
+
+```bash
+mkdir ~/college-baseball-mcp-deploy && cd ~/college-baseball-mcp-deploy
+cp /workspaces/spark-template/src/mcp/standalone-worker.ts ./index.ts
+
+# Create wrangler.toml (see MCP_DEPLOYMENT_GUIDE.md)
+wrangler login
+wrangler deploy
+```
+
+### 3️⃣ Add Security (Optional but Recommended)
+
+```bash
+wrangler kv:namespace create "RATE_LIMIT"
+wrangler secret put MCP_API_KEY
+wrangler deploy
+```
+
+---
+
+## 📚 Complete Guide
+
+See **[MCP_DEPLOYMENT_GUIDE.md](./MCP_DEPLOYMENT_GUIDE.md)** for detailed instructions, troubleshooting, and examples.
+
+---
 
 ## Implementation: Add MCP Endpoint to Your Spark App
 

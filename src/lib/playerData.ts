@@ -8,6 +8,15 @@ export interface Player {
   bats: 'L' | 'R' | 'S';
   throws: 'L' | 'R';
   classYear: string;
+  photo?: string;
+  bio?: {
+    hometown?: string;
+    highSchool?: string;
+    height?: string;
+    weight?: number;
+    birthdate?: string;
+    major?: string;
+  };
   stats: {
     batting?: BattingStats;
     pitching?: PitchingStats;
@@ -134,6 +143,14 @@ export const mockPlayers: Player[] = [
     bats: 'R',
     throws: 'R',
     classYear: 'Junior',
+    photo: 'https://i.pravatar.cc/150?img=12',
+    bio: {
+      hometown: 'Houston, TX',
+      highSchool: 'Kingwood High School',
+      height: '6\'2"',
+      weight: 195,
+      major: 'Sports Management',
+    },
     stats: {
       batting: {
         pa: 245,
@@ -199,6 +216,14 @@ export const mockPlayers: Player[] = [
     bats: 'L',
     throws: 'R',
     classYear: 'Sophomore',
+    photo: 'https://i.pravatar.cc/150?img=33',
+    bio: {
+      hometown: 'San Francisco, CA',
+      highSchool: 'Archbishop Mitty High School',
+      height: '5\'11"',
+      weight: 175,
+      major: 'Economics',
+    },
     stats: {
       batting: {
         pa: 238,
@@ -264,6 +289,14 @@ export const mockPlayers: Player[] = [
     bats: 'R',
     throws: 'R',
     classYear: 'Senior',
+    photo: 'https://i.pravatar.cc/150?img=15',
+    bio: {
+      hometown: 'Atlanta, GA',
+      highSchool: 'Parkview High School',
+      height: '6\'0"',
+      weight: 210,
+      major: 'Business Administration',
+    },
     stats: {
       batting: {
         pa: 228,

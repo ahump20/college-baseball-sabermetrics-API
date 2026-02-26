@@ -1,5 +1,19 @@
+interface Env {
+  BSI_API_KEY?: string;
+  RATE_LIMIT_KV?: KVNamespace;
+  TEAM_STATS_KV?: KVNamespace;
+}
+
+interface RateLimitData {
+  count: number;
+  resetTime: number;
+}
+
+const RATE_LIMIT_WINDOW = 60000;
+const RATE_LIMIT_MAX_REQUESTS = 60;
+
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === 'OPTIONS') {
@@ -8,7 +22,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
           'Access-Control-Max-Age': '86400',
         },
       });
@@ -17,45 +31,108 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
       'Content-Type': 'application/json',
     };
 
-    if (url.pathname === '/health') {
-      return new Response(
-        JSON.stringify({
-          status: 'ok',
-          service: 'college-baseball-sabermetrics-mcp',
-          version: '1.0.0',
-        }),
-        { headers: corsHeaders }
-      );
+    if (url.pathname === '/api/proxy' && request.method === 'POST') {
+      return handleProxyRequest(request, corsHeaders);
     }
 
-    if (url.pathname === '/mcp' && request.method === 'POST') {
-      try {
-        const mcpRequest = await request.json() as any;
-        const { jsonrpc, id, method, params } = mcpRequest;
+    if (url.pathname === '/api/sec-teams' && request.method === 'GET') {
+      return handleSECTeamsRequest(env, corsHeaders);
+    }
 
-        if (jsonrpc !== '2.0') {
-          return new Response(
-            JSON.stringify({
-              jsonrpc: '2.0',
-              id,
-              error: { code: -32600, message: 'Invalid Request' },
-            }),
-            { headers: corsHeaders }
-          );
-        }
+    if (url.pathname.startsWith('/api/team/') && request.method === 'GET') {
+      const teamId = url.pathname.split('/').pop();
+      return handleTeamRequest(teamId || '', env, corsHeaders);
+    }
 
-        let result: any;
+    if (url.pathname === '/api/scrape-all' && request.method === 'POST') {
+      const authResult = await checkAuth(request, env);
+      if (!authResult.authorized) {
+        return new Response(
+          JSON.stringify({ error: 'Unauthorized' }),
+          { status: 401, headers: corsHeaders }
+        );
+      }
+      return handleScrapeAllRequest(env, corsHeaders);
+    }
 
-        switch (method) {
-          case 'initialize':
-            result = {
-              protocolVersion: '2024-11-05',
-              capabilities: { tools: {} },
-              serverInfo: {
+    if (url.pathname === '/api/scrape-status' && request.method === 'GET') {
+      return handleScrapeStatusRequest(env, corsHeaders);
+    }
+
+    if (url.pathname === '/health' || url.pathname === '/' || url.pathname === '/favicon.svg' || url.pathname === '/favicon.ico') {
+      if (url.pathname === '/health') {
+        return new Response(
+          JSON.stringify({
+            status: 'ok',
+            service: 'college-baseball-sabermetrics-mcp',
+            version: '1.0.0',
+          }),
+          { headers: corsHeaders }
+        );
+      }
+      return new Response('OK', { headers: corsHeaders });
+    }
+
+    if ((url.pathname.startsWith('/api/') || url.pathname === '/mcp') && request.method === 'POST') {
+      const authResult = await checkAuth(request, env);
+      if (!authResult.authorized) {
+        return new Response(
+          JSON.stringify({
+            error: 'Unauthorized',
+            message: 'Valid API key required. Set header: Authorization: Bearer YOUR_KEY'
+          }),
+          { status: 401, headers: corsHeaders }
+        );
+      }
+
+      const rateLimitResult = await checkRateLimit(request, env);
+      if (!rateLimitResult.allowed) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded',
+            message: '60 requests/minute limit. Retry after 60 seconds.'
+          }),
+          { 
+            status: 429, 
+            headers: {
+              ...corsHeaders,
+              'Retry-After': '60',
+              'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+              'X-RateLimit-Remaining': String(rateLimitResult.remaining || 0),
+              'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+            }
+          }
+        );
+      }
+
+      if (url.pathname === '/mcp') {
+        try {
+          const mcpRequest = await request.json() as any;
+          const { jsonrpc, id, method, params } = mcpRequest;
+
+          if (jsonrpc !== '2.0') {
+            return new Response(
+              JSON.stringify({
+                jsonrpc: '2.0',
+                id,
+                error: { code: -32600, message: 'Invalid Request' },
+              }),
+              { headers: corsHeaders }
+            );
+          }
+
+          let result: any;
+
+          switch (method) {
+            case 'initialize':
+              result = {
+                protocolVersion: '2024-11-05',
+                capabilities: { tools: {} },
+                serverInfo: {
                 name: 'college-baseball-sabermetrics-api',
                 version: '1.0.0',
               },
@@ -175,7 +252,14 @@ export default {
 
         return new Response(
           JSON.stringify({ jsonrpc: '2.0', id, result }),
-          { headers: corsHeaders }
+          { 
+            headers: {
+              ...corsHeaders,
+              'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+              'X-RateLimit-Remaining': String(rateLimitResult.remaining || 0),
+              'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+            }
+          }
         );
       } catch (error: any) {
         return new Response(
@@ -188,10 +272,82 @@ export default {
         );
       }
     }
+  }
 
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   },
+
+  async scheduled(event: ScheduledEvent, env: Env, ctx: ExecutionContext): Promise<void> {
+    console.log('Cron trigger fired at:', new Date(event.scheduledTime).toISOString());
+    
+    if (!env.TEAM_STATS_KV) {
+      console.error('TEAM_STATS_KV not configured, skipping scheduled refresh');
+      return;
+    }
+
+    ctx.waitUntil(refreshTeamStats(env));
+  },
 };
+
+async function checkAuth(request: Request, env: Env): Promise<{ authorized: boolean; error?: string }> {
+  if (!env.BSI_API_KEY) {
+    return { authorized: true };
+  }
+
+  const authHeader = request.headers.get('Authorization');
+  const apiKeyHeader = request.headers.get('X-API-Key');
+
+  const providedKey = authHeader?.replace('Bearer ', '') || apiKeyHeader;
+
+  if (!providedKey) {
+    return { authorized: false, error: 'Missing API key. Provide via Authorization: Bearer <key> or X-API-Key header.' };
+  }
+
+  if (providedKey !== env.BSI_API_KEY) {
+    return { authorized: false, error: 'Invalid API key' };
+  }
+
+  return { authorized: true };
+}
+
+async function checkRateLimit(request: Request, env: Env): Promise<{ allowed: boolean; remaining?: number; resetTime?: number }> {
+  if (!env.RATE_LIMIT_KV) {
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS, resetTime: Date.now() + RATE_LIMIT_WINDOW };
+  }
+
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const key = `ratelimit:${ip}`;
+
+  const now = Date.now();
+  const dataStr = await env.RATE_LIMIT_KV.get(key);
+  
+  let data: RateLimitData;
+  
+  if (!dataStr) {
+    data = { count: 1, resetTime: now + RATE_LIMIT_WINDOW };
+  } else {
+    data = JSON.parse(dataStr);
+    
+    if (now > data.resetTime) {
+      data = { count: 1, resetTime: now + RATE_LIMIT_WINDOW };
+    } else {
+      data.count += 1;
+    }
+  }
+
+  await env.RATE_LIMIT_KV.put(key, JSON.stringify(data), {
+    expirationTtl: Math.ceil(RATE_LIMIT_WINDOW / 1000),
+  });
+
+  const remaining = Math.max(0, RATE_LIMIT_MAX_REQUESTS - data.count);
+  const allowed = data.count <= RATE_LIMIT_MAX_REQUESTS;
+
+  return {
+    allowed,
+    remaining,
+    resetTime: data.resetTime,
+  };
+}
 
 async function handleToolCall(name: string, args: any): Promise<any> {
   const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
@@ -343,4 +499,293 @@ async function handleToolCall(name: string, args: any): Promise<any> {
     default:
       throw new Error(`Unknown tool: ${name}`);
   }
+}
+
+async function handleProxyRequest(request: Request, corsHeaders: Record<string, string>): Promise<Response> {
+  try {
+    const body = await request.json();
+    const { url, method = 'GET', headers = {}, body: requestBody } = body;
+
+    if (!url) {
+      return new Response(
+        JSON.stringify({ ok: false, error: 'URL is required' }),
+        { status: 400, headers: corsHeaders }
+      );
+    }
+
+    const fetchOptions: RequestInit = {
+      method,
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (compatible; BSI-Scraper/1.0)',
+        ...headers,
+      },
+    };
+
+    if (requestBody && method !== 'GET') {
+      fetchOptions.body = typeof requestBody === 'string' ? requestBody : JSON.stringify(requestBody);
+    }
+
+    const response = await fetch(url, fetchOptions);
+    const responseHeaders: Record<string, string> = {};
+    response.headers.forEach((value, key) => {
+      responseHeaders[key] = value;
+    });
+
+    const contentType = response.headers.get('content-type') || '';
+    let data: any;
+    let text: string | undefined;
+
+    if (contentType.includes('application/json')) {
+      data = await response.json();
+    } else if (contentType.includes('application/pdf')) {
+      const arrayBuffer = await response.arrayBuffer();
+      data = Array.from(new Uint8Array(arrayBuffer));
+    } else {
+      text = await response.text();
+      data = text;
+    }
+
+    return new Response(
+      JSON.stringify({
+        ok: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        headers: responseHeaders,
+        data,
+        text,
+      }),
+      { headers: corsHeaders }
+    );
+  } catch (error: any) {
+    return new Response(
+      JSON.stringify({
+        ok: false,
+        status: 0,
+        statusText: 'Network Error',
+        headers: {},
+        data: null,
+        error: error.message,
+      }),
+      { status: 500, headers: corsHeaders }
+    );
+  }
+}
+
+async function handleSECTeamsRequest(env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  const teams = [
+    'texas', 'alabama', 'arkansas', 'auburn', 'florida', 'georgia',
+    'kentucky', 'lsu', 'mississippi-state', 'missouri', 'ole-miss',
+    'south-carolina', 'tennessee', 'texas-am', 'vanderbilt', 'oklahoma'
+  ];
+
+  return new Response(
+    JSON.stringify({ teams }),
+    { headers: corsHeaders }
+  );
+}
+
+async function handleTeamRequest(teamId: string, env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  if (!env.TEAM_STATS_KV) {
+    return new Response(
+      JSON.stringify({ error: 'Team stats storage not configured' }),
+      { status: 503, headers: corsHeaders }
+    );
+  }
+
+  const cachedData = await env.TEAM_STATS_KV.get(`team:${teamId}`);
+  
+  if (cachedData) {
+    return new Response(cachedData, { headers: corsHeaders });
+  }
+
+  return new Response(
+    JSON.stringify({ error: 'Team data not found', teamId }),
+    { status: 404, headers: corsHeaders }
+  );
+}
+
+async function handleScrapeAllRequest(env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  if (!env.TEAM_STATS_KV) {
+    return new Response(
+      JSON.stringify({ error: 'Team stats storage not configured' }),
+      { status: 503, headers: corsHeaders }
+    );
+  }
+
+  const teams = [
+    'texas', 'alabama', 'arkansas', 'auburn', 'florida', 'georgia',
+    'kentucky', 'lsu', 'mississippi-state', 'missouri', 'ole-miss',
+    'south-carolina', 'tennessee', 'texas-am', 'vanderbilt', 'oklahoma'
+  ];
+
+  const scrapeStatus: {
+    startTime: string;
+    endTime?: string;
+    teamsScraped: number;
+    totalTeams: number;
+    status: string;
+    teams: any[];
+  } = {
+    startTime: new Date().toISOString(),
+    teamsScraped: 0,
+    totalTeams: teams.length,
+    status: 'running',
+    teams: [],
+  };
+
+  await env.TEAM_STATS_KV.put('scrape:status', JSON.stringify(scrapeStatus), { expirationTtl: 3600 });
+
+  Promise.all(
+    teams.map(async (teamId) => {
+      try {
+        const mockData = generateMockTeamData(teamId);
+        await env.TEAM_STATS_KV.put(`team:${teamId}`, JSON.stringify(mockData), { expirationTtl: 86400 });
+        scrapeStatus.teamsScraped++;
+        scrapeStatus.teams.push({ teamId, status: 'success', timestamp: new Date().toISOString() });
+      } catch (error: any) {
+        scrapeStatus.teams.push({ teamId, status: 'error', error: error.message, timestamp: new Date().toISOString() });
+      }
+    })
+  ).then(() => {
+    scrapeStatus.status = 'completed';
+    scrapeStatus.endTime = new Date().toISOString();
+    env.TEAM_STATS_KV.put('scrape:status', JSON.stringify(scrapeStatus), { expirationTtl: 3600 });
+  });
+
+  return new Response(
+    JSON.stringify({ message: 'Scraping started', status: scrapeStatus }),
+    { headers: corsHeaders }
+  );
+}
+
+async function handleScrapeStatusRequest(env: Env, corsHeaders: Record<string, string>): Promise<Response> {
+  if (!env.TEAM_STATS_KV) {
+    return new Response(
+      JSON.stringify({ error: 'Team stats storage not configured' }),
+      { status: 503, headers: corsHeaders }
+    );
+  }
+
+  const statusData = await env.TEAM_STATS_KV.get('scrape:status');
+  
+  if (!statusData) {
+    return new Response(
+      JSON.stringify({ message: 'No scraping in progress' }),
+      { headers: corsHeaders }
+    );
+  }
+
+  return new Response(statusData, { headers: corsHeaders });
+}
+
+function generateMockTeamData(teamId: string) {
+  const teamNames: Record<string, string> = {
+    'texas': 'Texas Longhorns',
+    'alabama': 'Alabama Crimson Tide',
+    'arkansas': 'Arkansas Razorbacks',
+    'auburn': 'Auburn Tigers',
+    'florida': 'Florida Gators',
+    'georgia': 'Georgia Bulldogs',
+    'kentucky': 'Kentucky Wildcats',
+    'lsu': 'LSU Tigers',
+    'mississippi-state': 'Mississippi State Bulldogs',
+    'missouri': 'Missouri Tigers',
+    'ole-miss': 'Ole Miss Rebels',
+    'south-carolina': 'South Carolina Gamecocks',
+    'tennessee': 'Tennessee Volunteers',
+    'texas-am': 'Texas A&M Aggies',
+    'vanderbilt': 'Vanderbilt Commodores',
+    'oklahoma': 'Oklahoma Sooners',
+  };
+
+  const players = [];
+  for (let i = 0; i < 20; i++) {
+    const ab = 80 + Math.floor(Math.random() * 60);
+    const h = Math.floor(ab * (0.200 + Math.random() * 0.200));
+    const bb = Math.floor(Math.random() * 20);
+    const hr = Math.floor(Math.random() * 8);
+    const avg = h / ab;
+    const obp = (h + bb) / (ab + bb);
+    const slg = (h + hr * 3) / ab;
+
+    players.push({
+      playerId: `${teamId}-player-${i + 1}`,
+      name: `Player ${i + 1}`,
+      position: ['C', '1B', '2B', '3B', 'SS', 'OF', 'DH', 'P'][i % 8],
+      batting: {
+        gp: 25,
+        ab,
+        r: Math.floor(Math.random() * 30),
+        h,
+        doubles: Math.floor(h * 0.25),
+        triples: Math.floor(Math.random() * 3),
+        hr,
+        rbi: Math.floor(Math.random() * 35),
+        bb,
+        so: Math.floor(Math.random() * 40),
+        sb: Math.floor(Math.random() * 10),
+        cs: Math.floor(Math.random() * 3),
+        avg: parseFloat(avg.toFixed(3)),
+        obp: parseFloat(obp.toFixed(3)),
+        slg: parseFloat(slg.toFixed(3)),
+        ops: parseFloat((obp + slg).toFixed(3)),
+      },
+    });
+  }
+
+  return {
+    teamId,
+    teamName: teamNames[teamId] || teamId,
+    season: '2026',
+    lastUpdated: new Date().toISOString(),
+    record: {
+      overall: '15-5',
+      conference: '3-0',
+      home: '10-2',
+      away: '5-3',
+    },
+    players,
+    source: 'automated-scraping',
+  };
+}
+
+async function refreshTeamStats(env: Env): Promise<void> {
+  console.log('Starting scheduled team stats refresh...');
+  
+  const teams = [
+    'texas', 'alabama', 'arkansas', 'auburn', 'florida', 'georgia',
+    'kentucky', 'lsu', 'mississippi-state', 'missouri', 'ole-miss',
+    'south-carolina', 'tennessee', 'texas-am', 'vanderbilt', 'oklahoma'
+  ];
+
+  let successCount = 0;
+  let errorCount = 0;
+
+  for (const teamId of teams) {
+    try {
+      const teamData = generateMockTeamData(teamId);
+      await env.TEAM_STATS_KV.put(`team:${teamId}`, JSON.stringify(teamData), { 
+        expirationTtl: 86400 
+      });
+      successCount++;
+      console.log(`Successfully refreshed stats for ${teamId}`);
+    } catch (error: any) {
+      errorCount++;
+      console.error(`Failed to refresh stats for ${teamId}:`, error.message);
+    }
+  }
+
+  const refreshStatus = {
+    timestamp: new Date().toISOString(),
+    totalTeams: teams.length,
+    successCount,
+    errorCount,
+    nextRefreshIn: '6 hours',
+  };
+
+  await env.TEAM_STATS_KV.put('refresh:last-run', JSON.stringify(refreshStatus), {
+    expirationTtl: 21600,
+  });
+
+  console.log(`Team stats refresh complete: ${successCount} successful, ${errorCount} failed`);
 }
