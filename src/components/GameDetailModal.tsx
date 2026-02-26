@@ -8,7 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { ESPNGame } from '@/hooks/use-espn-scoreboard';
-import { Clock, MapPin, Circle, ArrowClockwise, Baseball, Trophy, ChartBar, ListBullets } from '@phosphor-icons/react';
+import { GameHighlightsPanel } from '@/components/GameHighlightsPanel';
+import { Clock, MapPin, Circle, ArrowClockwise, Baseball, Trophy, ChartBar, ListBullets, VideoCamera } from '@phosphor-icons/react';
 import { format } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -257,8 +258,12 @@ export function GameDetailModal({ game, open, onOpenChange }: GameDetailModalPro
           </Card>
         </div>
 
-        <Tabs defaultValue="box-score" className="flex-1 flex flex-col px-6 pb-6">
-          <TabsList className="grid w-full grid-cols-3 mb-4">
+        <Tabs defaultValue="highlights" className="flex-1 flex flex-col px-6 pb-6">
+          <TabsList className="grid w-full grid-cols-4 mb-4">
+            <TabsTrigger value="highlights" className="gap-2">
+              <VideoCamera size={16} />
+              Highlights
+            </TabsTrigger>
             <TabsTrigger value="box-score" className="gap-2">
               <ChartBar size={16} />
               Box Score
@@ -272,6 +277,16 @@ export function GameDetailModal({ game, open, onOpenChange }: GameDetailModalPro
               Team Stats
             </TabsTrigger>
           </TabsList>
+
+          <TabsContent value="highlights" className="flex-1 m-0">
+            <ScrollArea className="h-[500px] pr-4">
+              <GameHighlightsPanel 
+                gameId={game.id} 
+                completed={isFinal}
+                compact={true}
+              />
+            </ScrollArea>
+          </TabsContent>
 
           <TabsContent value="box-score" className="flex-1 m-0">
             <ScrollArea className="h-[500px] pr-4">

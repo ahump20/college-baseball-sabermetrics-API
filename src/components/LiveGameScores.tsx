@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useESPNScoreboard, ESPNGame } from '@/hooks/use-espn-scoreboard';
 import { GameDetailModal } from '@/components/GameDetailModal';
-import { Calendar, Clock, MapPin, Trophy, ArrowClockwise, Broadcast, Circle } from '@phosphor-icons/react';
+import { Calendar, Clock, MapPin, Trophy, ArrowClockwise, Broadcast, Circle, VideoCamera } from '@phosphor-icons/react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, formatDistanceToNow } from 'date-fns';
 import { toast } from 'sonner';
@@ -170,17 +170,28 @@ export function LiveGameScores() {
                           <Clock size={14} />
                           <span>{format(new Date(game.date), 'MMM d, yyyy h:mm a')}</span>
                         </div>
-                        <Badge 
-                          variant={status.variant} 
-                          className={`gap-1.5 ${
-                            status.isLive 
-                              ? 'bg-success text-white border-success' 
-                              : ''
-                          }`}
-                        >
-                          {status.isLive && <Circle size={8} weight="fill" className="animate-pulse" />}
-                          {status.label}
-                        </Badge>
+                        <div className="flex items-center gap-2">
+                          {status.variant === 'secondary' && (
+                            <Badge 
+                              variant="outline" 
+                              className="gap-1.5 bg-primary/10 text-primary border-primary/30"
+                            >
+                              <VideoCamera size={12} weight="bold" />
+                              Highlights
+                            </Badge>
+                          )}
+                          <Badge 
+                            variant={status.variant} 
+                            className={`gap-1.5 ${
+                              status.isLive 
+                                ? 'bg-success text-white border-success' 
+                                : ''
+                            }`}
+                          >
+                            {status.isLive && <Circle size={8} weight="fill" className="animate-pulse" />}
+                            {status.label}
+                          </Badge>
+                        </div>
                       </div>
 
                       <div className="grid gap-3">
