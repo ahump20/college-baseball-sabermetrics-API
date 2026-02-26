@@ -714,13 +714,11 @@ export function PlayerProfile() {
   const careerHighlights = generateCareerHighlights(selectedPlayer, seasonHistory);
 
   return (
-  return (
     <div className="space-y-6">
-        <Button variant="outline" size="sm" onClick={() => setSelectedPlayer(null)} className="gap-2">
-          <ArrowLeft size={16} />
-          Back to List
-        </Button>
-      </div>
+      <Button variant="outline" size="sm" onClick={() => setSelectedPlayer(null)} className="gap-2">
+        <ArrowLeft size={16} />
+        Back to List
+      </Button>
 
       <Card className="border-2 border-primary/20">
         <CardContent className="p-6">
