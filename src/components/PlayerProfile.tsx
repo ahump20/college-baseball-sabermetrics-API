@@ -47,11 +47,14 @@ import {
   Fire,
   Crown,
   Sparkle,
+  VideoCamera,
 } from '@phosphor-icons/react';
 import { mockPlayers, type Player } from '@/lib/playerData';
 import { realDataService } from '@/lib/realDataService';
 import { toast } from 'sonner';
 import { getPlayerPhoto, getTeamLogo } from '@/lib/photoService';
+import { VideoHighlights } from '@/components/VideoHighlights';
+import { generatePlayerVideoClips } from '@/lib/videoClipData';
 
 interface SeasonStats {
   season: string;
@@ -709,6 +712,7 @@ export function PlayerProfile() {
   const isPitcher = !!selectedPlayer.stats.pitching;
   const careerTotals = calculateCareerTotals(seasonHistory, isPitcher ? 'pitching' : 'batting');
   const careerHighlights = generateCareerHighlights(selectedPlayer, seasonHistory);
+  const videoClips = generatePlayerVideoClips(selectedPlayer);
 
   return (
     <div className="space-y-6">
@@ -975,7 +979,7 @@ export function PlayerProfile() {
       </Card>
 
       <Tabs defaultValue="seasons" className="w-full">
-        <TabsList className="grid w-full max-w-2xl grid-cols-5">
+        <TabsList className="grid w-full max-w-3xl grid-cols-6">
           <TabsTrigger value="seasons" className="gap-2">
             <CalendarBlank size={16} />
             Seasons
@@ -987,6 +991,10 @@ export function PlayerProfile() {
           <TabsTrigger value="highlights" className="gap-2">
             <Star size={16} />
             Highlights
+          </TabsTrigger>
+          <TabsTrigger value="videos" className="gap-2">
+            <VideoCamera size={16} />
+            Videos
           </TabsTrigger>
           <TabsTrigger value="advanced" className="gap-2">
             <ChartBar size={16} />
@@ -1349,6 +1357,14 @@ export function PlayerProfile() {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="videos" className="mt-6">
+          <VideoHighlights
+            playerName={selectedPlayer.name}
+            playerPosition={selectedPlayer.position}
+            clips={videoClips}
+          />
         </TabsContent>
 
         <TabsContent value="advanced" className="mt-6">
