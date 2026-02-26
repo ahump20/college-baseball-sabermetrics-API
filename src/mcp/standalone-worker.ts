@@ -1,5 +1,18 @@
+interface Env {
+  MCP_API_KEY?: string;
+  RATE_LIMIT_KV?: KVNamespace;
+}
+
+interface RateLimitData {
+  count: number;
+  resetTime: number;
+}
+
+const RATE_LIMIT_WINDOW = 3600000;
+const RATE_LIMIT_MAX_REQUESTS = 1000;
+
 export default {
-  async fetch(request: Request): Promise<Response> {
+  async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
 
     if (request.method === 'OPTIONS') {
@@ -8,7 +21,7 @@ export default {
         headers: {
           'Access-Control-Allow-Origin': '*',
           'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-          'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+          'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
           'Access-Control-Max-Age': '86400',
         },
       });
@@ -17,7 +30,7 @@ export default {
     const corsHeaders = {
       'Access-Control-Allow-Origin': '*',
       'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization, X-API-Key',
       'Content-Type': 'application/json',
     };
 
@@ -33,6 +46,35 @@ export default {
     }
 
     if (url.pathname === '/mcp' && request.method === 'POST') {
+      const authResult = await checkAuth(request, env);
+      if (!authResult.authorized) {
+        return new Response(
+          JSON.stringify({ error: authResult.error }),
+          { status: 401, headers: corsHeaders }
+        );
+      }
+
+      const rateLimitResult = await checkRateLimit(request, env);
+      if (!rateLimitResult.allowed) {
+        return new Response(
+          JSON.stringify({ 
+            error: 'Rate limit exceeded',
+            limit: RATE_LIMIT_MAX_REQUESTS,
+            window: RATE_LIMIT_WINDOW / 1000,
+            resetAt: new Date(rateLimitResult.resetTime!).toISOString()
+          }),
+          { 
+            status: 429, 
+            headers: {
+              ...corsHeaders,
+              'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+              'X-RateLimit-Remaining': String(rateLimitResult.remaining || 0),
+              'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+            }
+          }
+        );
+      }
+
       try {
         const mcpRequest = await request.json() as any;
         const { jsonrpc, id, method, params } = mcpRequest;
@@ -175,7 +217,14 @@ export default {
 
         return new Response(
           JSON.stringify({ jsonrpc: '2.0', id, result }),
-          { headers: corsHeaders }
+          { 
+            headers: {
+              ...corsHeaders,
+              'X-RateLimit-Limit': String(RATE_LIMIT_MAX_REQUESTS),
+              'X-RateLimit-Remaining': String(rateLimitResult.remaining || 0),
+              'X-RateLimit-Reset': String(rateLimitResult.resetTime),
+            }
+          }
         );
       } catch (error: any) {
         return new Response(
@@ -192,6 +241,66 @@ export default {
     return new Response('Not Found', { status: 404, headers: corsHeaders });
   },
 };
+
+async function checkAuth(request: Request, env: Env): Promise<{ authorized: boolean; error?: string }> {
+  if (!env.MCP_API_KEY) {
+    return { authorized: true };
+  }
+
+  const authHeader = request.headers.get('Authorization');
+  const apiKeyHeader = request.headers.get('X-API-Key');
+
+  const providedKey = authHeader?.replace('Bearer ', '') || apiKeyHeader;
+
+  if (!providedKey) {
+    return { authorized: false, error: 'Missing API key. Provide via Authorization: Bearer <key> or X-API-Key header.' };
+  }
+
+  if (providedKey !== env.MCP_API_KEY) {
+    return { authorized: false, error: 'Invalid API key' };
+  }
+
+  return { authorized: true };
+}
+
+async function checkRateLimit(request: Request, env: Env): Promise<{ allowed: boolean; remaining?: number; resetTime?: number }> {
+  if (!env.RATE_LIMIT_KV) {
+    return { allowed: true, remaining: RATE_LIMIT_MAX_REQUESTS, resetTime: Date.now() + RATE_LIMIT_WINDOW };
+  }
+
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const key = `ratelimit:${ip}`;
+
+  const now = Date.now();
+  const dataStr = await env.RATE_LIMIT_KV.get(key);
+  
+  let data: RateLimitData;
+  
+  if (!dataStr) {
+    data = { count: 1, resetTime: now + RATE_LIMIT_WINDOW };
+  } else {
+    data = JSON.parse(dataStr);
+    
+    if (now > data.resetTime) {
+      data = { count: 1, resetTime: now + RATE_LIMIT_WINDOW };
+    } else {
+      data.count += 1;
+    }
+  }
+
+  await env.RATE_LIMIT_KV.put(key, JSON.stringify(data), {
+    expirationTtl: Math.ceil(RATE_LIMIT_WINDOW / 1000),
+  });
+
+  const remaining = Math.max(0, RATE_LIMIT_MAX_REQUESTS - data.count);
+  const allowed = data.count <= RATE_LIMIT_MAX_REQUESTS;
+
+  return {
+    allowed,
+    remaining,
+    resetTime: data.resetTime,
+  };
+}
 
 async function handleToolCall(name: string, args: any): Promise<any> {
   const ESPN_BASE = 'https://site.api.espn.com/apis/site/v2/sports/baseball/college-baseball';
