@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Trophy } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -11,6 +11,7 @@ import { LiveAPISimulator } from '@/components/LiveAPISimulator';
 import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
+import { Scoreboard } from '@/components/Scoreboard';
 
 function App() {
   const [activeTab, setActiveTab] = useState('api');
@@ -73,6 +74,10 @@ function App() {
               <Users size={18} weight="bold" />
               <span className="font-medium text-[0.875rem]">Players</span>
             </TabsTrigger>
+            <TabsTrigger value="scoreboard" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+              <Trophy size={18} weight="bold" />
+              <span className="font-medium text-[0.875rem]">Scoreboard</span>
+            </TabsTrigger>
             <TabsTrigger value="live" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
               <Pulse size={18} weight="bold" />
               <span className="font-medium text-[0.875rem]">Live API</span>
@@ -110,6 +115,10 @@ function App() {
 
             <TabsContent value="players" className="mt-0 space-y-6">
               <PlayerComparison />
+            </TabsContent>
+
+            <TabsContent value="scoreboard" className="mt-0 space-y-6">
+              <Scoreboard />
             </TabsContent>
 
             <TabsContent value="live" className="mt-0 space-y-6">
