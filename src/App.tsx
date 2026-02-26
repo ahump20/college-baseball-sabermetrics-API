@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Baseball } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -11,9 +11,10 @@ import { LiveAPISimulator } from '@/components/LiveAPISimulator';
 import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
+import { GameScoreboard } from '@/components/GameScoreboard';
 
 function App() {
-  const [activeTab, setActiveTab] = useState('api');
+  const [activeTab, setActiveTab] = useState('games');
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -49,6 +50,10 @@ function App() {
       <main className="flex-1 container mx-auto px-6 lg:px-8 py-8">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full space-y-8">
           <TabsList className="inline-flex h-12 w-auto gap-1 bg-muted/50 p-1 rounded-lg">
+            <TabsTrigger value="games" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+              <Baseball size={18} weight="bold" />
+              <span className="font-medium text-[0.875rem]">Games</span>
+            </TabsTrigger>
             <TabsTrigger value="api" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
               <Code size={18} weight="bold" />
               <span className="font-medium text-[0.875rem]">API Explorer</span>
@@ -88,6 +93,10 @@ function App() {
           </TabsList>
 
           <div>
+            <TabsContent value="games" className="mt-0 space-y-6">
+              <GameScoreboard />
+            </TabsContent>
+
             <TabsContent value="api" className="mt-0 space-y-6">
               <APIExplorer />
             </TabsContent>
