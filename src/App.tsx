@@ -22,7 +22,7 @@ import { TexasLonghornsData } from '@/components/TexasLonghornsData';
 import { PageLoading } from '@/components/Loading';
 import { usePageLoading } from '@/hooks/use-loading';
 import { useIsMobile } from '@/hooks/use-mobile';
-import blazeLogo from '@/assets/images/blaze-sports-intel-logo.png';
+import blazeLogo from '@/assets/images/bsi-shield-blaze.webp';
 import bsiLogoFull from '@/assets/images/bsi-logo-primary.webp';
 import bsiBanner from '@/assets/images/bsi-banner-horizontal.webp';
 import bsiHeroStadium from '@/assets/images/bsi-hero-stadium.webp';

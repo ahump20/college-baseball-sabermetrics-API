@@ -149,6 +149,7 @@ class RateLimiter {
   private readonly maxPerSecond: number;
   private lastWindowStart = Date.now();
   private countInWindow = 0;
+  private timerId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(maxPerSecond: number) {
     this.maxPerSecond = maxPerSecond;
@@ -174,9 +175,13 @@ class RateLimiter {
       next();
     }
 
-    if (this.queue.length > 0) {
+    // Schedule a single wakeup for the next window; skip if one is already pending.
+    if (this.queue.length > 0 && this.timerId === null) {
       const delay = 1000 - (now - this.lastWindowStart);
-      setTimeout(() => this.tryDispatch(), delay);
+      this.timerId = setTimeout(() => {
+        this.timerId = null;
+        this.tryDispatch();
+      }, delay);
     }
   }
 }
@@ -210,7 +215,7 @@ export class NCAAAPIClient {
       }
 
       const data = await response.json();
-      this.cache.set(url, { data, timestamp: now });
+      this.cache.set(url, { data, timestamp: Date.now() });
       return data as T;
     } catch (error) {
       console.error('NCAA API fetch error:', error);

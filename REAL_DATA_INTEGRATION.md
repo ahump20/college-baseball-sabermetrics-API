@@ -18,7 +18,28 @@ A fully typed TypeScript client for accessing ESPN's college baseball data:
 - **Standings & Rankings**: Access conference standings and rankings
 - **Smart Caching**: Built-in 5-minute cache to reduce API calls
 
-### ESPN Game Data Service (`src/lib/espnGameData.ts`)
+### NCAA API Client (`src/lib/ncaaAPI.ts`)
+A fully typed TypeScript client for the free [henrygd/ncaa-api](https://github.com/henrygd/ncaa-api) (`https://ncaa-api.henrygd.me`):
+
+- **Scoreboard**: Daily D1 game scoreboard across all conferences
+- **Box Scores**: Complete box score for any game ID
+- **Play-by-Play**: Per-inning play events for any game
+- **Team Stats**: Aggregate team stats for a specific game
+- **Standings**: Season standings for all D1 teams
+- **Rankings**: Weekly top-25 rankings
+- **Smart Caching**: Built-in 5-minute cache (timestamp set after successful fetch)
+- **Rate Limiting**: Throttled to 3 req/s (public API allows up to 5 req/s)
+- **Graceful Errors**: Returns `null` on failure; serves stale cache on network error
+
+### Multi-Source Data Connector (`src/lib/dataConnector.ts`)
+An abstraction layer that normalises both ESPN and NCAA response shapes into a single set of unified types with configurable source priority and automatic fallback:
+
+- **Unified types**: `UnifiedGame`, `UnifiedBoxScore`, `UnifiedPlayByPlayEvent`, `UnifiedStandingEntry`, `UnifiedRankingEntry` — each carrying a `source: 'espn' | 'ncaa'` discriminator
+- **Configurable priority**: Constructor and `setSources()` accept an ordered source list (default: `['espn', 'ncaa']`)
+- **Automatic fallback**: Each method tries the primary source first; silently falls back to secondary on error or empty result
+- **Per-call source override**: Optional `source` parameter pins a single request to a specific backend
+
+
 Advanced service for fetching and transforming real game data:
 
 - **Game Schedules**: Fetch today's games or games from the last N days
@@ -118,40 +139,70 @@ const recentGames = await espnGameData.getRecentGames(7); // last 7 days
 const boxScore = await espnGameData.getGameBoxScore('gameId');
 const playByPlay = await espnGameData.getPlayByPlay('gameId');
 
-// Check game data cache
-const gamesCacheStats = espnGameData.getCacheStats();
+// NEW: NCAA API client
+import { ncaaAPI } from '@/lib/ncaaAPI';
+const ncaaScoreboard = await ncaaAPI.getScoreboard('2024/04/01');
+const ncaaBoxScore  = await ncaaAPI.getBoxScore('5931001');
+const ncaaPlays     = await ncaaAPI.getPlayByPlay('5931001');
+const ncaaStandings = await ncaaAPI.getStandings(2024);
+const ncaaRankings  = await ncaaAPI.getRankings(10);
+
+// NEW: Multi-source connector (ESPN primary, NCAA fallback)
+import { dataConnector } from '@/lib/dataConnector';
+const games     = await dataConnector.getScoreboard('2024-04-01'); // ISO, YYYYMMDD, or YYYY/MM/DD
+const boxScore  = await dataConnector.getBoxScore('401234567');
+const plays     = await dataConnector.getPlayByPlay('401234567');
+const standings = await dataConnector.getStandings(2024);
+const rankings  = await dataConnector.getRankings(5);
+
+// Override source priority at runtime
+dataConnector.setSources(['ncaa', 'espn']);
+
+// Pin a single call to a specific source
+const ncaaBox = await dataConnector.getBoxScore('12345', 'ncaa');
+
+
 console.log(`${gamesCacheStats.boxScores} box scores, ${gamesCacheStats.playByPlay} PBP cached`);
 ```
 
 ## Data Flow
 
 ```
-ESPN API
-   ↓
-ESPN API Client (caching layer)
-   ↓
-┌─────────────────────┬──────────────────────────┐
-│                     │                          │
-Real Data Service     ESPN Game Data Service     │
-(player transformation) (game transformation)    │
-│                     │                          │
-└─────────────────────┴──────────────────────────┘
+ESPN API                     NCAA API (henrygd/ncaa-api)
+   ↓                                  ↓
+ESPN API Client              NCAA API Client
+(5-min TTL cache)            (5-min TTL cache, 3 req/s limit)
+   ↓                                  ↓
+         Multi-Source Data Connector
+         (configurable priority + fallback)
+              ↓  normalise  ↓
+         Unified Types (UnifiedGame, UnifiedBoxScore, …)
+              ↓
+┌────────────────────┬──────────────────────────┐
+│                    │                          │
+Real Data Service    ESPN Game Data Service     │
+(player transform)   (game transform)           │
+│                    │                          │
+└────────────────────┴──────────────────────────┘
    ↓                     ↓
 Player Data Model    Box Score / PBP Models
    ↓                     ↓
 UI Components (Players, Comparison, Games, etc.)
 ```
 
+
 ## API Endpoints Used
+
+### ESPN (primary source)
 
 The integration uses ESPN's public college baseball API endpoints:
 
-- `GET /sports/baseball/college-baseball/teams` - Team directory
-- `GET /sports/baseball/college-baseball/teams/{id}/roster` - Team rosters
-- `GET /sports/baseball/college-baseball/scoreboard` - Games/schedule
-- `GET /sports/baseball/college-baseball/summary?event={id}` - **Game details, box scores, and play-by-play**
-- `GET /sports/baseball/college-baseball/standings` - Standings
-- `GET /sports/baseball/college-baseball/rankings` - Rankings
+- `GET /sports/baseball/college-baseball/teams` — Team directory
+- `GET /sports/baseball/college-baseball/teams/{id}/roster` — Team rosters
+- `GET /sports/baseball/college-baseball/scoreboard` — Games/schedule
+- `GET /sports/baseball/college-baseball/summary?event={id}` — **Game details, box scores, and play-by-play**
+- `GET /sports/baseball/college-baseball/standings` — Standings
+- `GET /sports/baseball/college-baseball/rankings` — Rankings
 
 **Note**: The `/summary` endpoint is the primary source for real box score data, providing:
 - Complete line scores (runs by inning)
@@ -159,6 +210,24 @@ The integration uses ESPN's public college baseball API endpoints:
 - Player batting statistics (AB, R, H, RBI, BB, SO, AVG)
 - Player pitching statistics (IP, H, R, ER, BB, SO, ERA, pitch counts)
 - Game metadata (venue, attendance, status, notes)
+
+### NCAA / henrygd-api (fallback source)
+
+Base URL: `https://ncaa-api.henrygd.me`
+
+| Method | Endpoint | Description |
+|---|---|---|
+| `getScoreboard(date?)` | `/scoreboard/baseball/d1/{YYYY/MM/DD}/all-conf` | Daily D1 scoreboard |
+| `getBoxScore(gameId)` | `/game/{id}/boxscore` | Box score for a game |
+| `getPlayByPlay(gameId)` | `/game/{id}/play_by_play` | Play-by-play events |
+| `getTeamStats(gameId)` | `/game/{id}/team_stats` | Team stats for a game |
+| `getStandings(year?)` | `/standings/baseball/d1/{year}` | Season standings |
+| `getRankings(week?)` | `/rankings/baseball/d1/{week}` | Weekly top-25 rankings |
+
+**Known limitations (NCAA source)**:
+- Play-by-play events do not expose per-play half-inning; all events default to `'top'` — use ESPN for precise half-inning sequencing
+- Standings entries are fully normalised (wins/losses/pct parsed); ESPN standings are best-effort due to the highly nested, season-variable response shape
+
 
 ## Notes & Limitations
 
@@ -172,7 +241,7 @@ The integration uses ESPN's public college baseball API endpoints:
 - ✅ **COMPLETED**: Real box score data from ESPN
 - ✅ **COMPLETED**: Actual batting and pitching statistics
 - ✅ **COMPLETED**: Game scoreboard with live/final status
-- Integration with additional data sources (NCAA.org, Sportradar, etc.)
+- ✅ **COMPLETED**: NCAA API client + multi-source connector with ESPN/NCAA fallback
 - Historical season data loading (multiple seasons)
 - Real-time game updates (live score refresh)
 - Enhanced play-by-play visualization
@@ -226,12 +295,15 @@ The system gracefully handles API failures:
 To extend the real data integration:
 
 1. **Add new ESPN endpoints** in `espnAPI.ts`
-2. **Transform new data types** in `realDataService.ts`
-3. **Update the Player interface** in `playerData.ts` if needed
-4. **Add UI controls** in component files
+2. **Add new NCAA endpoints** in `ncaaAPI.ts`
+3. **Wire new data types** into `dataConnector.ts` normalisers
+4. **Transform new data types** in `realDataService.ts`
+5. **Update the Player interface** in `playerData.ts` if needed
+6. **Add UI controls** in component files
 
 ## References
 
 - [ESPN Public API Documentation](https://site.api.espn.com)
+- [henrygd/ncaa-api — MIT-licensed NCAA data proxy](https://github.com/henrygd/ncaa-api)
 - [College Baseball Sabermetrics Formulas](https://library.fangraphs.com)
-- PRD.md - Full product requirements
+- PRD.md — Full product requirements

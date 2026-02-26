@@ -37,7 +37,7 @@ export interface UnifiedGame {
   date: string;
   /** Human-readable title, e.g. "Team A vs Team B" */
   title: string;
-  /** 'pre' | 'in' | 'post' */
+  /** 'pre' | 'in' | 'post' | 'cancelled' */
   state: string;
   /** Detailed status string, e.g. "Final" or "Top 4th" */
   statusDetail: string;
@@ -446,11 +446,11 @@ export class DataConnector {
           const result = await espnAPI.getStandings(yearOrSeason);
           if (result) {
             // ESPN standings shape is highly nested and varies across seasons.
-            // A complete normalisation would require parsing many optional
-            // sub-groups.  For now we return the raw children/entries array
-            // as a best-effort pass-through so callers can at least detect
-            // that data is available; the NCAA source provides fully-parsed
-            // UnifiedStandingEntry objects.
+            // We extract entries from the first available level (children or
+            // standings.entries) and map them into UnifiedStandingEntry.  Fields
+            // that ESPN embeds deeper than the top-level entry object will
+            // default to empty/zero values; the NCAA source yields fully-parsed
+            // entries if more complete data is required.
             const groups: unknown[] = result.children ?? result.standings?.entries ?? [];
             if (groups.length) {
               return (groups as Array<Record<string, unknown>>).map((entry) => ({
