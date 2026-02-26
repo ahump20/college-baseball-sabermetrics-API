@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Trophy } from '@phosphor-icons/react';
+import { Code, Database, Calculator, GitBranch, ChartBar, Pulse, Shapes, ArrowsLeftRight, Users, Trophy, Gear } from '@phosphor-icons/react';
 import { APIExplorer } from '@/components/APIExplorer';
 import { SchemaViewer } from '@/components/SchemaViewer';
 import { MetricsCalculator } from '@/components/MetricsCalculator';
@@ -12,6 +12,8 @@ import { InteractiveERD } from '@/components/InteractiveERD';
 import { ComparisonTool } from '@/components/ComparisonTool';
 import { PlayerComparison } from '@/components/PlayerComparison';
 import { Scoreboard } from '@/components/Scoreboard';
+import { KVNamespaceManager } from '@/components/KVNamespaceManager';
+import { APISecretsManager } from '@/components/APISecretsManager';
 
 function App() {
   const [activeTab, setActiveTab] = useState('api');
@@ -90,6 +92,10 @@ function App() {
               <ChartBar size={18} weight="bold" />
               <span className="font-medium text-[0.875rem]">Coverage</span>
             </TabsTrigger>
+            <TabsTrigger value="config" className="gap-2 px-4 data-[state=active]:bg-card data-[state=active]:shadow-sm rounded-md transition-all">
+              <Gear size={18} weight="bold" />
+              <span className="font-medium text-[0.875rem]">Config</span>
+            </TabsTrigger>
           </TabsList>
 
           <div>
@@ -131,6 +137,13 @@ function App() {
 
             <TabsContent value="coverage" className="mt-0 space-y-6">
               <CoverageDashboard />
+            </TabsContent>
+
+            <TabsContent value="config" className="mt-0 space-y-6">
+              <div className="space-y-6">
+                <KVNamespaceManager />
+                <APISecretsManager />
+              </div>
             </TabsContent>
           </div>
         </Tabs>
