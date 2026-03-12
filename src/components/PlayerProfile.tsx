@@ -712,6 +712,7 @@ export function PlayerProfile() {
   const isPitcher = !!selectedPlayer.stats.pitching;
   const careerTotals = calculateCareerTotals(seasonHistory, isPitcher ? 'pitching' : 'batting');
   const careerHighlights = generateCareerHighlights(selectedPlayer, seasonHistory);
+  const videoClips = generatePlayerVideoClips(selectedPlayer);
 
   return (
     <div className="space-y-6">

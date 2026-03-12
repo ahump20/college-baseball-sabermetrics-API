@@ -20,7 +20,7 @@ import { HighlightlyDataDashboard } from '@/components/HighlightlyDataDashboard'
 import { NCAABaseballPortal } from '@/components/NCAABaseballPortal';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useIsMobile } from '@/hooks/use-mobile';
-import blazeLogo from '@/assets/images/bsi-logo-primary.webp';
+import blazeLogo from '@/assets/images/blaze-roundel-tight.png';
 
 type ViewType = 'dashboard' | 'api' | 'schema' | 'analytics' | 'players' | 'games' | 'coverage' | 'config' | 'teams' | 'live-scores' | 'trends' | 'highlightly' | 'portal';
 
@@ -96,11 +96,11 @@ function App() {
       <div className="p-6">
         <div className="flex items-center gap-3">
           <div className="relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-accent/30 rounded-xl blur-lg" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-accent/20 rounded-full blur-xl animate-pulse" />
             <img 
               src={blazeLogo} 
               alt="Blaze Sports Intel" 
-              className="h-12 w-auto relative z-10"
+              className="h-16 w-16 relative z-10 rounded-full ring-2 ring-primary/20"
             />
           </div>
         </div>
@@ -109,7 +109,7 @@ function App() {
             Blaze Sports Intel
           </h1>
           <p className="text-xs text-muted-foreground font-mono mt-1">
-            Sabermetrics Platform
+            NCAA Baseball Analytics
           </p>
         </div>
       </div>
