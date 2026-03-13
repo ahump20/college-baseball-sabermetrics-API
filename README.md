@@ -139,6 +139,23 @@ Test with:
 curl http://localhost:8787/health
 ```
 
+
+## Local Security Hooks
+
+Use the pre-commit framework with `gitleaks` so secrets are blocked before code is committed.
+
+```bash
+pip install pre-commit
+pre-commit install
+pre-commit run --all-files
+```
+
+This repository includes `.pre-commit-config.yaml` and `.gitleaks.toml`.
+
+- `.pre-commit-config.yaml` wires the local pre-commit hook to run `gitleaks`.
+- `.gitleaks.toml` contains baseline allowlist rules for known documentation/demo strings.
+- Any leak reported by gitleaks exits with a non-zero status and blocks the commit.
+
 ## 🌐 Deploy to Production
 
 ### Deploy MCP Server to Cloudflare Workers

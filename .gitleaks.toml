@@ -117,4 +117,6 @@ regexes = [
     '''DUMMY_''',
     '''FAKE_''',
     '''xxxxxxxx''',
+    '''Bearer\s+bsi_mcp_[a-z0-9]{40}''',
+    '''sk-1234567890abcdef''',
 ]

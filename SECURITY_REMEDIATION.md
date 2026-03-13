@@ -196,3 +196,36 @@ fi
 
 - **2026-03-12**: Initial remediation - removed hardcoded Highlightly API key
 - **2026-03-12**: Documented secure secret management patterns
+
+---
+
+
+## Local Hook Test Procedure
+
+Verify the hook actually blocks leaked credentials before committing:
+
+1. Ensure hooks are installed:
+   ```bash
+   pip install pre-commit
+   pre-commit install
+   ```
+2. Create a disposable test file with a fake key pattern:
+   ```bash
+   cat > /tmp/fake-secret.txt <<'EOF'
+   AWS_ACCESS_KEY_ID=AKIA1234567890ABCDEF
+   EOF
+   cp /tmp/fake-secret.txt ./fake-secret.txt
+   git add fake-secret.txt
+   ```
+3. Attempt to commit:
+   ```bash
+   git commit -m "test: verify secret scanner blocks fake key"
+   ```
+4. Expected result: `gitleaks` fails, commit exits non-zero, and commit is blocked.
+5. Cleanup:
+   ```bash
+   git restore --staged fake-secret.txt
+   rm -f fake-secret.txt /tmp/fake-secret.txt
+   ```
+
+CI parity: `.github/workflows/secret-scanning.yml` runs the same `gitleaks` scanner on pull requests.
