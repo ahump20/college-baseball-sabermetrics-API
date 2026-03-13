@@ -39,7 +39,13 @@ for name in "${!patterns[@]}"; do
       echo -e "${RED}✗ Potential secret detected in commit message:${NC}"
     fi
     echo -e "${YELLOW}  • ${name}${NC}"
-    head -n 1 "$match_file" | cut -c1-160
+    read -r first_match_line < "$match_file" || first_match_line=""
+    line_number="${first_match_line%%:*}"
+    if [ -n "$line_number" ]; then
+      echo "      (first match on line ${line_number}, content redacted)"
+    else
+      echo "      (match found, line information unavailable; content redacted)"
+    fi
     violations=$((violations + 1))
   fi
 done
