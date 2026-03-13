@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Blaze Sports Intel - Git Hooks Installer
-# Installs pre-commit hooks for secret detection
+# Installs Git hooks (pre-commit and commit-msg) for secret detection
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 set -e
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}🔧 Installing Git Pre-Commit Hooks${NC}"
+echo -e "${BLUE}🔧 Installing Git Hooks (pre-commit & commit-msg)${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -23,23 +23,20 @@ if [ ! -d .git ]; then
     exit 1
 fi
 
-# Create .git/hooks directory if it doesn't exist
-mkdir -p .git/hooks
+# Ensure hooks in .githooks exist and are executable
 
-# Copy pre-commit hook
+# Prepare pre-commit hook
 if [ -f .githooks/pre-commit ]; then
-    cp .githooks/pre-commit .git/hooks/pre-commit
-    chmod +x .git/hooks/pre-commit
+    chmod +x .githooks/pre-commit
     echo -e "${GREEN}✓ Installed pre-commit hook${NC}"
 else
     echo -e "${YELLOW}⚠ Warning: .githooks/pre-commit not found${NC}"
     exit 1
 fi
 
-# Copy commit-msg hook
+# Prepare commit-msg hook
 if [ -f .githooks/commit-msg ]; then
-    cp .githooks/commit-msg .git/hooks/commit-msg
-    chmod +x .git/hooks/commit-msg
+    chmod +x .githooks/commit-msg
     echo -e "${GREEN}✓ Installed commit-msg hook${NC}"
 else
     echo -e "${YELLOW}⚠ Warning: .githooks/commit-msg not found${NC}"
@@ -57,11 +54,11 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo ""
 echo "The pre-commit and commit-msg hooks will now scan for secrets before each commit."
 echo ""
-echo -e "${YELLOW}To test the hook:${NC}"
+echo -e "${YELLOW}To test the hooks:${NC}"
 echo "  1. Try staging a file with a fake API key"
 echo "  2. Run: git commit -m 'test'"
 echo "  3. The commit should be blocked"
 echo ""
-echo -e "${YELLOW}To bypass the hook (emergency only):${NC}"
+echo -e "${YELLOW}To bypass the hooks (emergency only):${NC}"
 echo "  git commit --no-verify"
 echo ""

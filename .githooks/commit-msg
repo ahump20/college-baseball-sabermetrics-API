@@ -25,23 +25,24 @@ declare -A patterns=(
   ["Anthropic key"]='sk-ant-[A-Za-z0-9_-]{20,}'
   ["Stripe key"]='(sk|pk)_(live|test)_[A-Za-z0-9]{16,}'
   ["GitHub PAT"]='github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}'
-  ["Cloudflare token"]='CLOUDFLARE_[A-Z0-9_]*TOKEN\s*=\s*[^[:space:]]{16,}'
+  ["Cloudflare token"]='CLOUDFLARE_[A-Z0-9_]*TOKEN[[:space:]]*=[[:space:]]*[^[:space:]]{16,}'
   ["Generic secret assignment"]='(^|[[:space:]])[A-Z][A-Z0-9_]*(SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CLIENT_SECRET)\s*=\s*[^[:space:]]{12,}'
 )
 
 violations=0
+match_file="$(mktemp -t commit_msg_secret_match.XXXXXX)"
+trap 'rm -f "$match_file"' EXIT INT TERM HUP
 for name in "${!patterns[@]}"; do
   pattern="${patterns[$name]}"
-  if grep -nE "$pattern" "$commit_msg_file" >/tmp/commit_msg_secret_match.$$ 2>/dev/null; then
+  if grep -nE "$pattern" "$commit_msg_file" >"$match_file" 2>/dev/null; then
     if [ "$violations" -eq 0 ]; then
       echo -e "${RED}✗ Potential secret detected in commit message:${NC}"
     fi
     echo -e "${YELLOW}  • ${name}${NC}"
-    head -n 1 /tmp/commit_msg_secret_match.$$ | cut -c1-160
+    head -n 1 "$match_file" | cut -c1-160
     violations=$((violations + 1))
   fi
 done
-rm -f /tmp/commit_msg_secret_match.$$ || true
 
 if [ "$violations" -gt 0 ]; then
   echo ""
