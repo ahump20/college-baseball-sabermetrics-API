@@ -26,7 +26,7 @@ declare -A patterns=(
   ["Stripe key"]='(sk|pk)_(live|test)_[A-Za-z0-9]{16,}'
   ["GitHub PAT"]='github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}'
   ["Cloudflare token"]='CLOUDFLARE_[A-Z0-9_]*TOKEN[[:space:]]*=[[:space:]]*[^[:space:]]{16,}'
-  ["Generic secret assignment"]='(^|[[:space:]])[A-Z][A-Z0-9_]*(SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CLIENT_SECRET)\s*=\s*[^[:space:]]{12,}'
+  ["Generic secret assignment"]='(^|[[:space:]])[A-Z][A-Z0-9_]*(SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CLIENT_SECRET)[[:space:]]*=[[:space:]]*[^[:space:]]{12,}'
 )
 
 violations=0
