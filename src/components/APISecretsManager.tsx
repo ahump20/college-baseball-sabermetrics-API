@@ -28,7 +28,7 @@ const defaultSecrets: APISecret[] = [
   {
     name: 'Highlightly API Key',
     key: 'HIGHLIGHTLY_API_KEY',
-    value: '0dd6501d-bd0f-4c6c-b653-084cafa3a995',
+    value: '',
     description: 'Highlightly MLB & College Baseball API access key (Owner only)',
     required: true
   },
@@ -170,6 +170,13 @@ export function APISecretsManager() {
         </div>
       </CardHeader>
       <CardContent className="space-y-6">
+        <Alert className="border-primary/30 bg-primary/5">
+          <ShieldCheck className="h-4 w-4" />
+          <AlertDescription>
+            <strong>Security Notice:</strong> API keys are stored securely in Spark KV and are never exposed in the client bundle or source code. Only you (the app owner) can view and modify these secrets.
+          </AlertDescription>
+        </Alert>
+
         <div className="flex gap-3">
           <Button
             variant="outline"

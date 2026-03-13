@@ -25,6 +25,13 @@ dist-ssr
 *.sw?
 
 .env
+.env.local
+.env.*.local
+.env.production
+.env.development
+*.secret
+*.pem
+*.key
 **/agent-eval-report*
 packages
 pids

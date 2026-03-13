@@ -4,6 +4,20 @@ A production-ready **NCAA Analytics Platform** with real-time game data, advance
 
 ---
 
+## 🔒 Security Notice
+
+**API Keys and Secrets**: This application uses secure secret management via Spark KV storage. 
+
+- ✅ **Secrets are NOT stored in source code**
+- ✅ **Environment variables are gitignored**
+- ✅ **Only app owners can access secrets**
+
+See [SECURITY_REMEDIATION.md](SECURITY_REMEDIATION.md) for details on secure secret management.
+
+⚠️ **Note**: The Bearer token shown in this README is for MCP authentication and should be rotated if compromised. Owner-only secrets are stored separately in the Configuration panel.
+
+---
+
 ## 🚨 FIXING CLAUDE.AI CONNECTION ERROR?
 
 ### 👉 **[🔥_START_HERE_🔥.txt](🔥_START_HERE_🔥.txt)** ⭐ **READ THIS FIRST!**
