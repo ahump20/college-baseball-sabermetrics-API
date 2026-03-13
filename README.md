@@ -128,6 +128,20 @@ npm run dev
 
 Open http://localhost:5173
 
+## Local Security Hooks
+
+To prevent accidental secret commits, this repository uses `pre-commit` with `gitleaks` and the project allowlist in `.gitleaks.toml`.
+
+1. Install `pre-commit`:
+   - macOS: `brew install pre-commit`
+   - Python/pipx: `pipx install pre-commit`
+2. Install the hooks in this repo:
+   - `pre-commit install`
+3. (Optional) Run the scanner manually before committing:
+   - `pre-commit run gitleaks --all-files`
+
+If the hook detects a potential secret, the commit is blocked until the secret is removed or the allowlist is updated intentionally.
+
 ### Run the MCP Server Locally
 
 ```bash

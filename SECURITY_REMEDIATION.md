@@ -155,32 +155,40 @@ Before deploying, ensure:
 
 ## Future Prevention
 
-### Automated Scanning (Recommended)
+### Local Hook Workflow (pre-commit + gitleaks)
 
-Add to `.github/workflows/security-scan.yml`:
+This repository now enforces a local secret scan through `.pre-commit-config.yaml` using the `gitleaks` hook and project-specific allowlist rules from `.gitleaks.toml`.
 
-```yaml
-name: Secret Scan
-on: [push, pull_request]
-jobs:
-  gitleaks:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v3
-      - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
-```
-
-### Pre-Commit Hook
-
-Add to `.git/hooks/pre-commit`:
+Bootstrap once per clone:
 
 ```bash
-#!/bin/sh
-if git diff --cached | grep -E "(sk-|api_key|secret|token)"; then
-  echo "❌ Potential secret detected in commit"
-  exit 1
-fi
+brew install pre-commit   # or: pipx install pre-commit
+pre-commit install
+```
+
+### CI Parity Check
+
+Pull requests and pushes to `main` run the same scanner in GitHub Actions via `.github/workflows/secret-scan.yml` so bypassed local hooks are still caught.
+
+### Test Procedure (must fail on fake key)
+
+Run this verification locally after installing hooks:
+
+```bash
+pre-commit install
+printf "FAKE_TEST_KEY=sk-test-1234567890abcdefghijklmnop
+" > secret-scan-test.env
+git add secret-scan-test.env
+git commit -m "test: verify secret hook blocks leaks"
+```
+
+Expected result: commit is rejected with a non-zero exit code from `gitleaks`.
+
+Cleanup after the failed commit attempt:
+
+```bash
+git reset HEAD secret-scan-test.env
+rm secret-scan-test.env
 ```
 
 ---
@@ -196,3 +204,4 @@ fi
 
 - **2026-03-12**: Initial remediation - removed hardcoded Highlightly API key
 - **2026-03-12**: Documented secure secret management patterns
+- **2026-03-13**: Added pre-commit + gitleaks local hook workflow, CI parity check, and hook-failure test procedure
