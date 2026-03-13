@@ -20,20 +20,31 @@ fi
 echo -e "${BLUE}🔐 Scanning commit message for leaked secrets...${NC}"
 
 # Patterns are intentionally broad because commit text should never include live credentials.
-declare -A patterns=(
-  ["OpenAI key"]='sk-(proj-|svcacct-|live-|test-)?[A-Za-z0-9_-]{20,}'
-  ["Anthropic key"]='sk-ant-[A-Za-z0-9_-]{20,}'
-  ["Stripe key"]='(sk|pk)_(live|test)_[A-Za-z0-9]{16,}'
-  ["GitHub PAT"]='github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}'
-  ["Cloudflare token"]='CLOUDFLARE_[A-Z0-9_]*TOKEN[[:space:]]*=[[:space:]]*[^[:space:]]{16,}'
-  ["Generic secret assignment"]='(^|[[:space:]])[A-Z][A-Z0-9_]*(SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CLIENT_SECRET)[[:space:]]*=[[:space:]]*[^[:space:]]{12,}'
+# Use parallel indexed arrays for Bash 3 compatibility (no associative arrays).
+pattern_names=(
+  "OpenAI key"
+  "Anthropic key"
+  "Stripe key"
+  "GitHub PAT"
+  "Cloudflare token"
+  "Generic secret assignment"
+)
+pattern_regexes=(
+  'sk-(proj-|svcacct-|live-|test-)?[A-Za-z0-9_-]{20,}'
+  'sk-ant-[A-Za-z0-9_-]{20,}'
+  '(sk|pk)_(live|test)_[A-Za-z0-9]{16,}'
+  'github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}'
+  'CLOUDFLARE_[A-Z0-9_]*TOKEN[[:space:]]*=[[:space:]]*[^[:space:]]{16,}'
+  '(^|[[:space:]])[A-Z][A-Z0-9_]*(SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CLIENT_SECRET)[[:space:]]*=[[:space:]]*[^[:space:]]{12,}'
 )
 
 violations=0
-match_file="$(mktemp -t commit_msg_secret_match.XXXXXX)"
+match_file="$(mktemp)" || { echo -e "${RED}✗ Failed to create temp file${NC}"; exit 1; }
 trap 'rm -f "$match_file"' EXIT INT TERM HUP
-for name in "${!patterns[@]}"; do
-  pattern="${patterns[$name]}"
+i=0
+while [ "$i" -lt "${#pattern_names[@]}" ]; do
+  name="${pattern_names[$i]}"
+  pattern="${pattern_regexes[$i]}"
   if grep -nE "$pattern" "$commit_msg_file" >"$match_file" 2>/dev/null; then
     if [ "$violations" -eq 0 ]; then
       echo -e "${RED}✗ Potential secret detected in commit message:${NC}"
@@ -48,6 +59,7 @@ for name in "${!patterns[@]}"; do
     fi
     violations=$((violations + 1))
   fi
+  i=$((i + 1))
 done
 
 if [ "$violations" -gt 0 ]; then
