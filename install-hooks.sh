@@ -36,6 +36,16 @@ else
     exit 1
 fi
 
+# Copy commit-msg hook
+if [ -f .githooks/commit-msg ]; then
+    cp .githooks/commit-msg .git/hooks/commit-msg
+    chmod +x .git/hooks/commit-msg
+    echo -e "${GREEN}✓ Installed commit-msg hook${NC}"
+else
+    echo -e "${YELLOW}⚠ Warning: .githooks/commit-msg not found${NC}"
+    exit 1
+fi
+
 # Configure git to use our hooks directory
 git config core.hooksPath .githooks
 echo -e "${GREEN}✓ Configured git to use .githooks directory${NC}"
@@ -45,7 +55,7 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}✅ Git hooks installed successfully!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "The pre-commit hook will now scan for secrets before each commit."
+echo "The pre-commit and commit-msg hooks will now scan for secrets before each commit."
 echo ""
 echo -e "${YELLOW}To test the hook:${NC}"
 echo "  1. Try staging a file with a fake API key"
