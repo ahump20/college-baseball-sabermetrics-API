@@ -302,3 +302,49 @@ curl -X GET "https://api.cloudflare.com/client/v4/accounts/{account_id}/audit_lo
 **Remember**: The security fix is complete, but the keys are still exposed until you rotate them. Make rotation your top priority today.
 
 **DO NOT** skip the rotation step. Assume all exposed keys are already compromised.
+
+---
+
+## Repository Security Controls (Verified)
+
+**Verification date**: 2026-03-13 (UTC)
+
+I attempted to complete this verification from the Codex environment, but this checkout has no configured Git remote and no authenticated GitHub CLI/API credentials available, so repository-level Security settings cannot be changed or validated from here.
+
+### Target toggles to enable in GitHub UI
+
+In **Settings → Security** (or **Code security and analysis**), set:
+
+- **Secret scanning**: Enabled
+- **Push protection**: Enabled
+- **Validity checks** (if shown on your plan): Enabled
+- **Generic secret detection** (if shown on your plan): Enabled
+
+### Verification runbook (manual in GitHub-connected shell)
+
+1. Create test branch:
+   ```bash
+   git checkout -b security/push-protection-verification
+   ```
+2. Add a non-real GitHub test token pattern (safe canary):
+   ```bash
+   printf 'TEST_GITHUB_TOKEN=ghp_0123456789abcdefghijklmnopqrstuvwxyzABCD\n' > push-protection-canary.txt
+   git add push-protection-canary.txt
+   git commit -m "test: verify github push protection blocks known token pattern"
+   ```
+3. Attempt push and confirm block/remediation guidance:
+   ```bash
+   git push -u origin security/push-protection-verification
+   ```
+4. Cleanup after verification:
+   ```bash
+   git checkout main
+   git branch -D security/push-protection-verification
+   git push origin --delete security/push-protection-verification
+   ```
+
+### Expected verification evidence
+
+- Push is rejected by GitHub push protection.
+- Response includes remediation guidance (remove secret from commits or follow allowlist/override workflow).
+- Test branch and test commit are removed locally and remotely.
