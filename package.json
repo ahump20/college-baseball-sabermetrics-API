@@ -9,7 +9,12 @@
         "build": "tsc -b --noCheck && vite build",
         "lint": "eslint .",
         "optimize": "vite optimize",
-        "preview": "vite preview"
+        "preview": "vite preview",
+        "security:install-hooks": "chmod +x install-hooks.sh .githooks/pre-commit && ./install-hooks.sh",
+        "security:scan": "bash .githooks/pre-commit",
+        "security:check-env": "git check-ignore .env || echo 'WARNING: .env is not gitignored!'",
+        "security:audit": "npm audit --audit-level=moderate",
+        "postinstall": "npm run security:install-hooks || echo 'Run: npm run security:install-hooks'"
     },
     "dependencies": {
         "@github/spark": ">=0.43.1 <1",

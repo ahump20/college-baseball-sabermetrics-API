@@ -24,14 +24,36 @@ dist-ssr
 *.sln
 *.sw?
 
+# Environment files - NEVER commit these!
 .env
+.env.*
+!.env.example
 .env.local
-.env.*.local
 .env.production
 .env.development
+.env.test
+
+# Secrets and certificates
 *.secret
 *.pem
 *.key
+*.p12
+*.pfx
+secrets/
+credentials/
+
+# API keys and tokens (additional patterns)
+**/api-keys.json
+**/secrets.json
+**/credentials.json
+**/.credentials
+**/.secrets
+
+# Cloud provider configs with secrets
+.aws/
+.azure/
+.gcloud/
+wrangler.toml.local
 **/agent-eval-report*
 packages
 pids

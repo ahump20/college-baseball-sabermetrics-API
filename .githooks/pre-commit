@@ -1,0 +1,173 @@
+#!/usr/bin/env bash
+
+# Blaze Sports Intel - Pre-commit Secret Detection Hook
+# This hook scans staged files for potential secrets before allowing commits
+# ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+set -e
+
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m' # No Color
+
+echo -e "${BLUE}🔒 Running secret detection scan...${NC}"
+
+# Function to check for common secret patterns
+check_secrets() {
+    local exit_code=0
+    local files_to_check=$(git diff --cached --name-only --diff-filter=ACM)
+    
+    if [ -z "$files_to_check" ]; then
+        echo -e "${GREEN}✓ No files to check${NC}"
+        return 0
+    fi
+    
+    # Pattern definitions (case-insensitive)
+    declare -A patterns=(
+        # API Keys
+        ["Generic API Key"]='(api[_-]?key|apikey)["\s]*[:=]["\s]*[A-Za-z0-9_\-]{20,}'
+        ["OpenAI Key"]='sk-[A-Za-z0-9]{20,}'
+        ["Anthropic Key"]='sk-ant-[A-Za-z0-9\-_]{30,}'
+        ["Stripe Key"]='(sk|pk)_(test|live)_[A-Za-z0-9]{24,}'
+        ["GitHub Token"]='gh[pousr]_[A-Za-z0-9]{36,}'
+        ["Generic Secret"]='(secret|password|passwd|pwd)["\s]*[:=]["\s]*[^"\s]{8,}'
+        ["Bearer Token"]='Bearer\s+[A-Za-z0-9\-._~+/]+=*'
+        ["Basic Auth"]='Basic\s+[A-Za-z0-9+/]+=*'
+        
+        # Cloudflare
+        ["Cloudflare Token"]='[A-Za-z0-9_\-]{40,}'
+        
+        # AWS
+        ["AWS Access Key"]='AKIA[0-9A-Z]{16}'
+        ["AWS Secret"]='aws(.{0,20})?["\s]*[:=]["\s]*[A-Za-z0-9/+=]{40}'
+        
+        # Private Keys
+        ["Private Key"]='-----BEGIN (RSA |EC )?PRIVATE KEY-----'
+        ["SSH Key"]='ssh-rsa\s+[A-Za-z0-9+/]+[=]{0,2}'
+        
+        # Database URLs
+        ["Database URL"]='(postgres|mysql|mongodb)://[^"\s]+'
+        
+        # JWT Tokens
+        ["JWT"]='eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*'
+        
+        # Common env var patterns
+        ["Env Secret"]='(TOKEN|SECRET|KEY|PASSWORD|PASSWD|PWD|API_KEY)=[^#\s]+'
+    )
+    
+    # Check each file
+    for file in $files_to_check; do
+        # Skip binary files
+        if file "$file" 2>/dev/null | grep -q "text"; then
+            for pattern_name in "${!patterns[@]}"; do
+                pattern="${patterns[$pattern_name]}"
+                
+                # Use grep with Perl regex for better pattern matching
+                matches=$(grep -iP "$pattern" "$file" 2>/dev/null || true)
+                
+                if [ -n "$matches" ]; then
+                    # Check if it's in a safe context
+                    if ! echo "$file" | grep -qE "(\.example|\.sample|\.template|test|spec|mock|fixture|\.md|\.txt)"; then
+                        echo -e "${RED}✗ Potential secret detected in $file${NC}"
+                        echo -e "${YELLOW}  Pattern: $pattern_name${NC}"
+                        echo -e "${YELLOW}  Match preview (first 50 chars):${NC}"
+                        echo "$matches" | head -n 1 | cut -c1-50
+                        echo ""
+                        exit_code=1
+                    fi
+                fi
+            done
+        fi
+    done
+    
+    return $exit_code
+}
+
+# Check for .env files being committed
+check_env_files() {
+    local env_files=$(git diff --cached --name-only | grep -E "^\.env(\.|$)" | grep -v "\.env\.example" || true)
+    
+    if [ -n "$env_files" ]; then
+        echo -e "${RED}✗ Attempting to commit .env file(s):${NC}"
+        echo "$env_files"
+        echo ""
+        echo -e "${YELLOW}💡 These files should never be committed!${NC}"
+        echo -e "   Use .env.example for templates instead."
+        echo ""
+        return 1
+    fi
+    
+    return 0
+}
+
+# Check for files in ignored directories
+check_ignored_patterns() {
+    local forbidden_files=$(git diff --cached --name-only | grep -E "(secrets/|credentials/|\.aws/|\.azure/)" || true)
+    
+    if [ -n "$forbidden_files" ]; then
+        echo -e "${RED}✗ Attempting to commit files from forbidden directories:${NC}"
+        echo "$forbidden_files"
+        echo ""
+        return 1
+    fi
+    
+    return 0
+}
+
+# Check for hardcoded IPs and URLs with auth
+check_hardcoded_credentials() {
+    local exit_code=0
+    local files_to_check=$(git diff --cached --name-only --diff-filter=ACM | grep -E "\.(ts|tsx|js|jsx|json)$" || true)
+    
+    for file in $files_to_check; do
+        # Check for URLs with embedded credentials
+        if grep -qP "(https?|ftp)://[^:]+:[^@]+@" "$file" 2>/dev/null; then
+            echo -e "${RED}✗ URL with embedded credentials in $file${NC}"
+            exit_code=1
+        fi
+        
+        # Check for hardcoded token assignments (not in comments)
+        if grep -P "^\s*[^/].*token\s*=\s*['\"][^'\"]{20,}" "$file" 2>/dev/null | grep -qv "//"; then
+            echo -e "${YELLOW}⚠ Potential hardcoded token in $file${NC}"
+        fi
+    done
+    
+    return $exit_code
+}
+
+# Main execution
+main() {
+    local errors=0
+    
+    # Run all checks
+    check_env_files || errors=$((errors + 1))
+    check_ignored_patterns || errors=$((errors + 1))
+    check_secrets || errors=$((errors + 1))
+    check_hardcoded_credentials || errors=$((errors + 1))
+    
+    if [ $errors -gt 0 ]; then
+        echo ""
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo -e "${RED}🚫 COMMIT BLOCKED: Potential secrets detected!${NC}"
+        echo -e "${RED}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
+        echo ""
+        echo -e "${YELLOW}To fix:${NC}"
+        echo "  1. Remove any secrets from staged files"
+        echo "  2. Move secrets to .env (which is gitignored)"
+        echo "  3. Use environment variables instead: process.env.YOUR_SECRET"
+        echo "  4. For Cloudflare Workers: use 'wrangler secret put' commands"
+        echo ""
+        echo -e "${YELLOW}To bypass this check (NOT RECOMMENDED):${NC}"
+        echo "  git commit --no-verify"
+        echo ""
+        exit 1
+    else
+        echo -e "${GREEN}✓ No secrets detected - commit approved${NC}"
+        exit 0
+    fi
+}
+
+main

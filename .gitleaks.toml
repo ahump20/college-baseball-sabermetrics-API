@@ -1,0 +1,120 @@
+# Gitleaks Configuration for Blaze Sports Intel
+# https://github.com/gitleaks/gitleaks
+
+title = "Blaze Sports Intel Secret Detection"
+
+[extend]
+useDefault = true
+
+[[rules]]
+id = "blaze-api-key"
+description = "Blaze Sports Intel API Key"
+regex = '''blaze_(live|test|dev)_[A-Za-z0-9]{32,}'''
+tags = ["blaze", "api-key"]
+
+[[rules]]
+id = "bsi-admin-key"
+description = "BSI Admin Key"
+regex = '''bsi_admin_[A-Za-z0-9]{32,}'''
+tags = ["bsi", "admin"]
+
+[[rules]]
+id = "highlightly-api-key"
+description = "Highlightly API Key"
+regex = '''[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}'''
+path = '''(?i)(highlightly|api|config)'''
+tags = ["highlightly", "api-key"]
+
+[[rules]]
+id = "cloudflare-api-token"
+description = "Cloudflare API Token"
+regex = '''[A-Za-z0-9_\-]{40}'''
+secretGroup = 1
+path = '''(?i)(cloudflare|wrangler|worker)'''
+tags = ["cloudflare", "api-token"]
+
+[[rules]]
+id = "openai-api-key"
+description = "OpenAI API Key"
+regex = '''sk-[A-Za-z0-9]{20,}'''
+tags = ["openai", "api-key"]
+
+[[rules]]
+id = "anthropic-api-key"
+description = "Anthropic API Key"
+regex = '''sk-ant-api[0-9]{2}-[A-Za-z0-9\-_]{30,}'''
+tags = ["anthropic", "api-key"]
+
+[[rules]]
+id = "stripe-api-key"
+description = "Stripe API Key"
+regex = '''(sk|pk)_(test|live)_[A-Za-z0-9]{24,}'''
+tags = ["stripe", "api-key", "payment"]
+
+[[rules]]
+id = "github-token"
+description = "GitHub Personal Access Token"
+regex = '''gh[pousr]_[A-Za-z0-9]{36,}'''
+tags = ["github", "token"]
+
+[[rules]]
+id = "generic-api-key"
+description = "Generic API Key"
+regex = '''(?i)(api[_-]?key|apikey|api[_-]?secret)["\s]*[:=]["\s]*[A-Za-z0-9_\-]{20,}'''
+tags = ["api-key", "generic"]
+
+[[rules]]
+id = "env-secret"
+description = "Environment Variable Secret"
+regex = '''(?i)(TOKEN|SECRET|KEY|PASSWORD|PASSWD)=[^#\s]{20,}'''
+path = '''\.env$'''
+tags = ["env", "secret"]
+
+[[rules]]
+id = "private-key"
+description = "Private Key"
+regex = '''-----BEGIN (RSA |EC )?PRIVATE KEY-----'''
+tags = ["private-key", "certificate"]
+
+[[rules]]
+id = "jwt-token"
+description = "JWT Token"
+regex = '''eyJ[A-Za-z0-9_-]*\.eyJ[A-Za-z0-9_-]*\.[A-Za-z0-9_-]*'''
+tags = ["jwt", "token"]
+
+[[rules]]
+id = "database-url"
+description = "Database Connection String"
+regex = '''(postgres|mysql|mongodb|redis)://[^"\s]+'''
+tags = ["database", "connection-string"]
+
+# Allowlist for false positives
+[allowlist]
+description = "Allowlist for safe patterns"
+paths = [
+    '''\.env\.example$''',
+    '''\.env\.sample$''',
+    '''\.env\.template$''',
+    '''.*\.md$''',
+    '''.*\.txt$''',
+    '''test/''',
+    '''tests/''',
+    '''spec/''',
+    '''__tests__/''',
+    '''mock/''',
+    '''mocks/''',
+    '''fixture/''',
+    '''fixtures/''',
+]
+
+regexes = [
+    '''PLACEHOLDER''',
+    '''YOUR_KEY_HERE''',
+    '''<YOUR_''',
+    '''INSERT_YOUR_''',
+    '''EXAMPLE_''',
+    '''TEST_TOKEN''',
+    '''DUMMY_''',
+    '''FAKE_''',
+    '''xxxxxxxx''',
+]
