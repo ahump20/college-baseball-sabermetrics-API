@@ -5,15 +5,17 @@
 
 set -e
 
+WRANGLER_CMD="npx wrangler"
+
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo "🔥 BLAZE SPORTS INTEL - MCP Server Deployment"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-# Check if wrangler is installed
-if ! command -v wrangler &> /dev/null; then
+# Check if wrangler is available locally
+if ! $WRANGLER_CMD --version &> /dev/null; then
     echo "❌ Error: Wrangler CLI not found"
-    echo "Install with: npm install -g wrangler"
+    echo "Install project dependencies with: npm install"
     exit 1
 fi
 
@@ -22,10 +24,10 @@ echo ""
 
 # Check if logged in to Cloudflare
 echo "Checking Cloudflare authentication..."
-if ! wrangler whoami &> /dev/null; then
+if ! $WRANGLER_CMD whoami &> /dev/null; then
     echo "⚠️  Not logged in to Cloudflare"
-    echo "Running: wrangler login"
-    wrangler login
+    echo "Running: npx wrangler login"
+    $WRANGLER_CMD login
 else
     echo "✅ Authenticated with Cloudflare"
 fi
@@ -39,7 +41,7 @@ echo ""
 
 # Check if RATE_LIMIT_KV exists
 echo "Creating RATE_LIMIT_KV namespace..."
-RATE_LIMIT_OUTPUT=$(wrangler kv:namespace create RATE_LIMIT_KV 2>&1) || true
+RATE_LIMIT_OUTPUT=$($WRANGLER_CMD kv:namespace create RATE_LIMIT_KV 2>&1) || true
 RATE_LIMIT_ID=$(echo "$RATE_LIMIT_OUTPUT" | grep -o 'id = "[^"]*"' | head -1 | sed 's/id = "\(.*\)"/\1/')
 
 if [ -z "$RATE_LIMIT_ID" ]; then
@@ -53,7 +55,7 @@ echo ""
 
 # Check if TEAM_STATS_KV exists
 echo "Creating TEAM_STATS_KV namespace..."
-TEAM_STATS_OUTPUT=$(wrangler kv:namespace create TEAM_STATS_KV 2>&1) || true
+TEAM_STATS_OUTPUT=$($WRANGLER_CMD kv:namespace create TEAM_STATS_KV 2>&1) || true
 TEAM_STATS_ID=$(echo "$TEAM_STATS_OUTPUT" | grep -o 'id = "[^"]*"' | head -1 | sed 's/id = "\(.*\)"/\1/')
 
 if [ -z "$TEAM_STATS_ID" ]; then
@@ -104,7 +106,7 @@ if [ -f .env ]; then
     if [ -n "$BSI_API_KEY" ]; then
         echo "Found BSI_API_KEY in .env file"
         echo "Setting secret in Cloudflare Workers..."
-        echo "$BSI_API_KEY" | wrangler secret put BSI_API_KEY
+        echo "$BSI_API_KEY" | $WRANGLER_CMD secret put BSI_API_KEY
         echo "✅ BSI_API_KEY secret set"
     else
         echo "⚠️  BSI_API_KEY not found in .env"
@@ -112,7 +114,7 @@ if [ -f .env ]; then
         read -p "Set BSI_API_KEY now? (y/n): " -n 1 -r
         echo
         if [[ $REPLY =~ ^[Yy]$ ]]; then
-            wrangler secret put BSI_API_KEY
+            $WRANGLER_CMD secret put BSI_API_KEY
             echo "✅ BSI_API_KEY secret set"
         else
             echo "⚠️  Skipping BSI_API_KEY setup - you'll need to set it manually later"
@@ -121,7 +123,7 @@ if [ -f .env ]; then
 else
     echo "⚠️  .env file not found"
     echo "Setting BSI_API_KEY interactively..."
-    wrangler secret put BSI_API_KEY
+    $WRANGLER_CMD secret put BSI_API_KEY
     echo "✅ BSI_API_KEY secret set"
 fi
 echo ""
@@ -132,7 +134,7 @@ echo "🚀 Step 4: Deploying to Cloudflare Workers"
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
 
-wrangler deploy
+$WRANGLER_CMD deploy
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
