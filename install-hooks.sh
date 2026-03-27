@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 # Blaze Sports Intel - Git Hooks Installer
-# Installs pre-commit hooks for secret detection
+# Installs git hooks for secret detection
 # ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 set -e
@@ -12,7 +12,7 @@ YELLOW='\033[1;33m'
 NC='\033[0m'
 
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
-echo -e "${BLUE}🔧 Installing Git Pre-Commit Hooks${NC}"
+echo -e "${BLUE}🔧 Installing Git Hooks${NC}"
 echo -e "${BLUE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
 
@@ -36,6 +36,17 @@ else
     exit 1
 fi
 
+
+# Copy commit-msg hook
+if [ -f .githooks/commit-msg ]; then
+    cp .githooks/commit-msg .git/hooks/commit-msg
+    chmod +x .git/hooks/commit-msg
+    echo -e "${GREEN}✓ Installed commit-msg hook${NC}"
+else
+    echo -e "${YELLOW}⚠ Warning: .githooks/commit-msg not found${NC}"
+    exit 1
+fi
+
 # Configure git to use our hooks directory
 git config core.hooksPath .githooks
 echo -e "${GREEN}✓ Configured git to use .githooks directory${NC}"
@@ -45,7 +56,7 @@ echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━
 echo -e "${GREEN}✅ Git hooks installed successfully!${NC}"
 echo -e "${GREEN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${NC}"
 echo ""
-echo "The pre-commit hook will now scan for secrets before each commit."
+echo "The pre-commit and commit-msg hooks will now scan for secrets before each commit."
 echo ""
 echo -e "${YELLOW}To test the hook:${NC}"
 echo "  1. Try staging a file with a fake API key"

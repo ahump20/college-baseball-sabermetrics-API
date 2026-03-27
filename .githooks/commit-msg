@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+
+# Blaze Sports Intel - Commit message secret detection hook
+# Prevent secrets from being leaked via commit metadata.
+
+set -euo pipefail
+
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+commit_msg_file="${1:-}"
+if [ -z "$commit_msg_file" ] || [ ! -f "$commit_msg_file" ]; then
+  echo -e "${RED}✗ commit-msg hook requires a valid commit message file${NC}"
+  exit 1
+fi
+
+echo -e "${BLUE}🔐 Scanning commit message for leaked secrets...${NC}"
+
+# Patterns are intentionally broad because commit text should never include live credentials.
+declare -A patterns=(
+  ["OpenAI key"]='sk-(proj-|svcacct-|live-|test-)?[A-Za-z0-9_-]{20,}'
+  ["Anthropic key"]='sk-ant-[A-Za-z0-9_-]{20,}'
+  ["Stripe key"]='(sk|pk)_(live|test)_[A-Za-z0-9]{16,}'
+  ["GitHub PAT"]='github_pat_[A-Za-z0-9_]{20,}|gh[pousr]_[A-Za-z0-9]{20,}'
+  ["Cloudflare token"]='CLOUDFLARE_[A-Z0-9_]*TOKEN\s*=\s*[^[:space:]]{16,}'
+  ["Generic secret assignment"]='(^|[[:space:]])[A-Z][A-Z0-9_]*(SECRET|TOKEN|API_KEY|ACCESS_KEY|PRIVATE_KEY|CLIENT_SECRET)\s*=\s*[^[:space:]]{12,}'
+)
+
+violations=0
+for name in "${!patterns[@]}"; do
+  pattern="${patterns[$name]}"
+  if grep -nE "$pattern" "$commit_msg_file" >/tmp/commit_msg_secret_match.$$ 2>/dev/null; then
+    if [ "$violations" -eq 0 ]; then
+      echo -e "${RED}✗ Potential secret detected in commit message:${NC}"
+    fi
+    echo -e "${YELLOW}  • ${name}${NC}"
+    head -n 1 /tmp/commit_msg_secret_match.$$ | cut -c1-160
+    violations=$((violations + 1))
+  fi
+done
+rm -f /tmp/commit_msg_secret_match.$$ || true
+
+if [ "$violations" -gt 0 ]; then
+  echo ""
+  echo -e "${RED}Commit blocked to prevent credential leakage in git history.${NC}"
+  echo -e "${YELLOW}Remove secrets from the commit message and retry.${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}✓ Commit message scan passed${NC}"
