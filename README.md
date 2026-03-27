@@ -1,6 +1,6 @@
-# ⚾ College Baseball Sabermetrics API
+# ⚾ College Baseball Sabermetrics MCP Server
 
-A production-ready **NCAA Analytics Platform** with real-time game data, advanced sabermetrics, and **Model Context Protocol (MCP)** integration for Claude.ai and other AI assistants.
+A production-ready **college baseball MCP server repository** with real-time game data, advanced sabermetrics, and Cloudflare Workers deployment support for Claude.ai and other AI assistants.
 
 ---
 
@@ -45,15 +45,17 @@ bash make-executable.sh
 
 ### Your Claude.ai Connection Details
 
-**Server URL:**
+After deploying this repository, connect Claude.ai to:
+
 ```
-https://sabermetrics.blazesportsintel.com/mcp
+https://YOUR-WORKER-URL/mcp
 ```
 
-**Custom Header:**
+Use an authorization header only if you configured `BSI_API_KEY`:
+
 ```
 Key:   Authorization
-Value: Bearer bsi_mcp_83453667ea265aa73a3ccae226cc0003ba006b27a
+Value: Bearer YOUR_BSI_API_KEY
 ```
 
 ---
@@ -131,12 +133,14 @@ Open http://localhost:5173
 ### Run the MCP Server Locally
 
 ```bash
-wrangler dev
+npm install
+npm run mcp:dev
 ```
 
 Test with:
 ```bash
 curl http://localhost:8787/health
+npm run mcp:test:local
 ```
 
 
@@ -161,8 +165,7 @@ This repository includes `.pre-commit-config.yaml` and `.gitleaks.toml`.
 ### Deploy MCP Server to Cloudflare Workers
 
 ```bash
-wrangler login
-wrangler deploy
+npm run mcp:deploy
 ```
 
 **Full guide:** [DEPLOY_MCP_TO_CLOUDFLARE.md](./DEPLOY_MCP_TO_CLOUDFLARE.md)
@@ -284,9 +287,9 @@ This project demonstrates:
 ## 🆘 Troubleshooting
 
 **MCP server won't deploy?**
-- Check Wrangler is installed: `wrangler --version`
-- Update if needed: `npm install -g wrangler@latest`
-- Re-authenticate: `wrangler logout && wrangler login`
+- Check local Wrangler: `npx wrangler --version`
+- Install dependencies if needed: `npm install`
+- Re-authenticate: `npx wrangler logout && npx wrangler login`
 
 **Claude.ai can't connect?**
 - Verify URL ends with `/mcp`

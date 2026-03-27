@@ -10,7 +10,7 @@ echo "============================================================="
 echo ""
 
 # Check if wrangler dev is running
-echo "⚠️  Make sure 'wrangler dev standalone-worker.ts' is running in another terminal"
+echo "⚠️  Make sure 'npm run mcp:dev' is running in another terminal"
 echo "Press ENTER to continue..."
 read
 
@@ -119,6 +119,6 @@ echo ""
 echo "✅ All local tests complete!"
 echo ""
 echo "Next steps:"
-echo "  1. If all tests passed, deploy with: wrangler deploy"
-echo "  2. After deploying, run ./test-mcp-production.sh to test the live server"
+echo "  1. If all tests passed, deploy with: npm run mcp:deploy"
+echo "  2. After deploying, run npm run mcp:test:production to test the live server"
 echo ""
