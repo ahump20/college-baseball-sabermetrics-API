@@ -2,14 +2,14 @@
 
 > **DEPRECATED — 2026-05-08.** This repository is a Spark-template demo from
 > early-stage exploration. Production college-baseball sabermetrics work has
-> moved to two actively-maintained surfaces:
+> moved to the canonical Blaze Sports Intel surface:
 >
-> - **Canonical MCP** (live, healthy, multi-sport): https://sabermetrics.blazesportsintel.com — `/mcp` endpoint, 31 tools across MLB, NFL, NBA, CFB, college baseball. D1-calibrated wOBA/FIP/wRC+ math, season-aware linear weights table (2013–2022), Pythagorean win expectation, pitcher wOBA-against. Source: https://github.com/Blaze-sports-Intel/bsi (private).
-> - **Standalone REST + MCP API** (separate product, dev-facing, tier-gated): https://api.blazesportsintel.com — currently being revived after a Cloudflare 522 outage. Source: https://github.com/Blaze-sports-Intel/college-baseball-api.
+> - **Canonical MCP** (live, multi-sport): https://sabermetrics.blazesportsintel.com — `/mcp` endpoint, 31 tools across MLB, NFL, NBA, CFB, college baseball. D1-calibrated wOBA/FIP/wRC+ math, season-aware linear weights table (2013–2022), empirical Bayes shrinkage for thin samples, Pythagorean win expectation, pitcher wOBA-against, streakiness analysis. Source: https://github.com/Blaze-sports-Intel/bsi (private).
 >
 > The math in this repo is one generation behind the canonical (MLB-derived
 > linear weights, no FIP clamp, no eBA/eSLG/ewOBA bounds, no Pythagorean
-> helpers). It works as a learning artifact but is not the place to extend.
+> helpers, no shrinkage for thin samples). It works as a learning artifact
+> but is not the place to extend.
 >
 > No active development. Issues and PRs will not be reviewed.
 
