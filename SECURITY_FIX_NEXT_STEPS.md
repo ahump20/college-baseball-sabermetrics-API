@@ -302,3 +302,43 @@ curl -X GET "https://api.cloudflare.com/client/v4/accounts/{account_id}/audit_lo
 **Remember**: The security fix is complete, but the keys are still exposed until you rotate them. Make rotation your top priority today.
 
 **DO NOT** skip the rotation step. Assume all exposed keys are already compromised.
+
+---
+
+## Repository Security Controls (Verified)
+
+**Verification date**: 2026-03-13 (UTC)  
+**Verification status from this environment**: ⚠️ Blocked (no GitHub authentication/session and no configured git remote in this clone)
+
+### Intended GitHub toggles to enable in Settings → Security / Code security and analysis
+
+- Secret scanning: **Enable**
+- Push protection: **Enable**
+- Validity checks (if available in repo plan): **Enable**
+- Generic secret detection (if available in repo plan): **Enable**
+
+### Verification attempt log (this workspace)
+
+1. Confirmed local repository has no configured remote (`git remote -v` returned no remotes).
+2. Confirmed GitHub CLI is unavailable (`gh` not installed in environment).
+3. Because this environment has no authenticated GitHub UI/API path for this repository, the requested push-protection verification (test branch + test token push + block confirmation) could not be executed here.
+
+### Manual verification procedure to complete in GitHub UI
+
+1. Open `college-baseball-sabermetrics-API` on GitHub.
+2. Navigate to **Settings → Security** (or **Code security and analysis**).
+3. Enable the following controls:
+   - Secret scanning
+   - Push protection
+   - Validity checks (if visible)
+   - Generic secret detection (if visible)
+4. Create a temporary branch, add a GitHub-documented fake test secret pattern to a throwaway file, commit, and attempt push.
+5. Confirm push protection blocks the push and shows remediation guidance.
+6. Delete the local and remote temporary branch and remove the test commit.
+
+### Evidence to record after manual completion
+
+- Screenshot or copy of enabled toggle states.
+- Date/time of blocked push attempt.
+- Exact remediation message shown by push protection.
+- Confirmation that temporary branch and test commit were deleted locally/remotely.
