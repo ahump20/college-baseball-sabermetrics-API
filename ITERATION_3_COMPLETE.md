@@ -104,7 +104,7 @@ Proxy: ON (orange cloud)
 #### Step 1: Create KV Namespace (1 minute)
 
 ```bash
-export CLOUDFLARE_API_TOKEN=cyiTcPF1i_7rDzJHjKqmYHGpnfBKFDmO9DN_q91Q
+export CLOUDFLARE_API_TOKEN=<YOUR_CLOUDFLARE_API_TOKEN>
 cd /workspaces/spark-template
 wrangler kv:namespace create RATE_LIMIT_KV
 ```

@@ -42,7 +42,7 @@ BSI_API_KEY=bsi_mcp_83453667ea265aa73a3ccae226cc0003ba006b27a
 **Cloudflare Account:**
 ```
 Account ID: a12cb329d84130460eed99b816e4d0d3
-API Token: cyiTcPF1i_7rDzJHjKqmYHGpnfBKFDmO9DN_q91Q
+API Token: <YOUR_CLOUDFLARE_API_TOKEN>
 ```
 
 **Production URL:**

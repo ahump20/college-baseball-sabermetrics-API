@@ -25,7 +25,7 @@ Run these commands in your terminal to go live:
 
 ```bash
 # 1. Set your Cloudflare API token
-export CLOUDFLARE_API_TOKEN=cyiTcPF1i_7rDzJHjKqmYHGpnfBKFDmO9DN_q91Q
+export CLOUDFLARE_API_TOKEN=<YOUR_CLOUDFLARE_API_TOKEN>
 
 # 2. Navigate to project directory
 cd /workspaces/spark-template
@@ -305,7 +305,7 @@ With 60 requests/minute rate limit, maximum possible usage is:
 
 **Cloudflare Account:**
 - **Account ID:** `a12cb329d84130460eed99b816e4d0d3`
-- **API Token:** `cyiTcPF1i_7rDzJHjKqmYHGpnfBKFDmO9DN_q91Q`
+- **API Token:** `<YOUR_CLOUDFLARE_API_TOKEN>`
 
 **Domain:**
 - **Zone:** `blazesportsintel.com`

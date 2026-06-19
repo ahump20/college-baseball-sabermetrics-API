@@ -23,7 +23,7 @@ This document provides **exact commands** to deploy the College Baseball Saberme
 ### Option A: Use API Token (Recommended)
 
 ```bash
-export CLOUDFLARE_API_TOKEN=cyiTcPF1i_7rDzJHjKqmYHGpnfBKFDmO9DN_q91Q
+export CLOUDFLARE_API_TOKEN=<YOUR_CLOUDFLARE_API_TOKEN>
 ```
 
 Verify authentication:
@@ -467,7 +467,7 @@ const corsHeaders = {
 
 ```bash
 # Authenticate
-export CLOUDFLARE_API_TOKEN=cyiTcPF1i_7rDzJHjKqmYHGpnfBKFDmO9DN_q91Q
+export CLOUDFLARE_API_TOKEN=<YOUR_CLOUDFLARE_API_TOKEN>
 
 # Deploy
 wrangler deploy
